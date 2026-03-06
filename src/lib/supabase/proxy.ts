@@ -4,6 +4,7 @@ import type { Database } from "@/lib/database.types";
 import { getSupabaseEnv } from "@/lib/env";
 
 const protectedPrefixes = ["/negociacoes"];
+const authRedirectPaths = new Set(["/login", "/cadastro"]);
 
 function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(
@@ -44,7 +45,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && pathname === "/login") {
+  if (user && authRedirectPaths.has(pathname)) {
     const appUrl = request.nextUrl.clone();
     appUrl.pathname = "/negociacoes";
     appUrl.search = "";

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
-import { LoginForm } from "@/components/auth/login-form";
+import { SignupForm } from "@/components/auth/signup-form";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export default async function LoginPage() {
+export default async function SignupPage() {
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -16,19 +16,19 @@ export default async function LoginPage() {
 
   return (
     <AuthCard
-      description="Entre com seu e-mail e senha para acessar o quadro de negociacoes."
-      eyebrow="Acesso"
+      description="Crie seu acesso e confirme o e-mail para entrar no CRM."
+      eyebrow="Cadastro"
       footer={
         <p>
-          Ainda nao tem conta?{" "}
-          <Link className="font-semibold text-[var(--primary)]" href="/cadastro">
-            Criar acesso
+          Ja tem acesso?{" "}
+          <Link className="font-semibold text-[var(--primary)]" href="/login">
+            Entrar
           </Link>
         </p>
       }
-      title="Entrar no CRM"
+      title="Criar conta"
     >
-      <LoginForm />
+      <SignupForm />
     </AuthCard>
   );
 }

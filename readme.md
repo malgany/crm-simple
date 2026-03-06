@@ -87,6 +87,33 @@ npm run lint
 npm run build
 ```
 
+### Auth por e-mail
+
+O fluxo de auth por e-mail agora usa as rotas:
+
+- `GET /auth/confirm`
+- `/cadastro`
+- `/confirmacao`
+- `/definir-senha`
+
+No Supabase hospedado, ajuste manualmente:
+
+1. `Authentication -> URL Configuration`
+2. `Site URL` = dominio real de producao
+3. `Redirect URLs` = inclua a base do app e, se desejar, `https://seu-dominio/auth/confirm`
+4. `Authentication -> Email Templates`
+
+Templates recomendados:
+
+- Confirm signup:
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email`
+- Invite user:
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite`
+- Reset password:
+  `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
+
+No ambiente local, os templates equivalentes ficam em `supabase/templates/`.
+
 ### Deploy
 
 - publicar na Vercel
