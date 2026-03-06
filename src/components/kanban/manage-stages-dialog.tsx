@@ -131,14 +131,15 @@ export function ManageStagesDialog({
         <div className="space-y-4">
           {drafts.map((draft, index) => (
             <div
-              className="rounded-[1.5rem] border border-slate-200 bg-slate-50/70 p-4"
+              className="rounded-[1.5rem] border border-[var(--border)] p-4"
               key={draft.id}
+              style={{ background: "var(--subtle-surface)" }}
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <Label htmlFor={`stage-${draft.id}`}>
                   Etapa {String(index + 1).padStart(2, "0")}
                 </Label>
-                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                   {draft.cardCount} card{draft.cardCount === 1 ? "" : "s"}
                 </span>
               </div>

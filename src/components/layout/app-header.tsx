@@ -73,12 +73,15 @@ export function AppHeader({
   };
 
   return (
-    <header className="surface-shadow flex items-center justify-between gap-4 rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
+    <header
+      className="surface-shadow flex items-center justify-between gap-4 rounded-[1.75rem] border border-white/60 px-5 py-4"
+      style={{ background: "var(--header-surface)" }}
+    >
       <p className="text-lg font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
         CRM
       </p>
       <div className="flex items-center gap-3">
-        <p className="text-right text-sm font-medium text-slate-600">
+        <p className="text-right text-sm font-medium text-[var(--muted-foreground)]">
           {companyName ? `${companyName} • ${roleLabel}` : roleLabel}
         </p>
         <div className="relative" ref={menuRef}>
@@ -94,7 +97,10 @@ export function AppHeader({
             <MoreHorizontal className="h-5 w-5" />
           </Button>
           {menuOpen ? (
-            <div className="surface-shadow absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 rounded-[1.5rem] border border-white/70 bg-white/95 p-3">
+            <div
+              className="surface-shadow absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 rounded-[1.5rem] border border-white/70 p-3"
+              style={{ background: "var(--panel-surface)" }}
+            >
               <div className="flex flex-col gap-2">
                 {menuItems.map((item) => {
                   const Icon = item.icon;

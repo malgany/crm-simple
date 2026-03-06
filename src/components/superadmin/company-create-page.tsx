@@ -57,14 +57,17 @@ export function CompanyCreatePage() {
 
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
-      <section className="surface-shadow rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
+      <section
+        className="surface-shadow rounded-[1.75rem] border border-white/60 px-5 py-4"
+        style={{ background: "var(--header-surface)" }}
+      >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
               Superadmin
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-950">Nova empresa</h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">Nova empresa</h1>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
               Cadastre a empresa e os usuarios iniciais. Pelo menos um admin ativo e obrigatorio.
             </p>
             <div className="mt-4">
@@ -77,7 +80,10 @@ export function CompanyCreatePage() {
         </div>
       </section>
 
-      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
+      <section
+        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
+        style={{ background: "var(--panel-surface)" }}
+      >
         <div className="space-y-2">
           <Label htmlFor="company-name">Nome da empresa</Label>
           <Input
@@ -91,8 +97,9 @@ export function CompanyCreatePage() {
       <section className="mt-4 space-y-4">
         {users.map((user, index) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 bg-white/90 p-4"
+            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
             key={user.id}
+            style={{ background: "var(--panel-surface)" }}
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">

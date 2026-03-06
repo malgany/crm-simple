@@ -25,16 +25,17 @@ export function StageColumn({
   return (
     <section
       className={cn(
-        "surface-shadow flex min-h-[32rem] min-w-[19rem] max-w-[22rem] flex-1 flex-col rounded-[2rem] border border-white/60 bg-white/70 backdrop-blur-sm",
-        isOver && "border-[var(--primary)] bg-white",
+        "surface-shadow flex min-h-[32rem] min-w-[19rem] max-w-[22rem] flex-1 flex-col rounded-[2rem] border border-white/60 backdrop-blur-sm",
+        isOver && "border-[var(--primary)]",
       )}
       ref={setNodeRef}
+      style={{ background: isOver ? "var(--card)" : "var(--panel-surface)" }}
     >
-      <header className="border-b border-slate-200/80 px-5 py-4">
+      <header className="border-b border-[var(--border)] px-5 py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-950">{stage.name}</h2>
-            <p className="text-sm text-slate-500">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">{stage.name}</h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
               {stage.cards.length} card{stage.cards.length === 1 ? "" : "s"}
             </p>
           </div>
@@ -54,8 +55,11 @@ export function StageColumn({
             />
           ))
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center text-sm text-slate-500">
-            <Inbox className="mb-3 h-5 w-5 text-slate-400" />
+          <div
+            className="flex flex-1 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
+            style={{ background: "var(--subtle-surface)" }}
+          >
+            <Inbox className="mb-3 h-5 w-5 text-[var(--muted-foreground)]" />
             Nenhum card nesta etapa.
           </div>
         )}

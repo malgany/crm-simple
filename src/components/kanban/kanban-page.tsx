@@ -7,6 +7,7 @@ import {
   Search,
   Shield,
   Settings2,
+  SunMoon,
   Users,
 } from "lucide-react";
 import {
@@ -20,6 +21,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
+import { useTheme } from "@/components/theme/theme-provider";
 import { ContactDialog } from "@/components/kanban/contact-dialog";
 import {
   ManageStagesDialog,
@@ -88,6 +90,7 @@ export function KanbanPage({
   viewer,
 }: KanbanPageProps) {
   const router = useRouter();
+  const { toggleTheme } = useTheme();
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -514,7 +517,7 @@ export function KanbanPage({
   };
 
   const usersPath = viewer.isSuperadmin
-    ? `/usuarios?companyId=${companyId}`
+    ? `/admin/empresas/${companyId}`
     : "/usuarios";
   const roleLabel = viewer.isSuperadmin
     ? "Superadmin"
@@ -522,20 +525,18 @@ export function KanbanPage({
       ? "Admin"
       : "Usuario";
   const menuItems = [
-    ...(canManageStages
-      ? [{
-          icon: Settings2,
-          label: "Configurar etapas",
-          onSelect: () => setManageStagesOpen(true),
-        }]
-      : []),
-    ...(canManageUsers
+    ...(viewer.isSuperadmin || canManageUsers
       ? [{
           icon: Users,
           label: "Usuarios",
           onSelect: () => router.push(usersPath),
         }]
       : []),
+    {
+      icon: SunMoon,
+      label: "Alternar tema (Claro / Escuro)",
+      onSelect: toggleTheme,
+    },
     ...(!viewer.isSuperadmin
       ? [{
           icon: LockKeyhole,
@@ -561,15 +562,43 @@ export function KanbanPage({
       />
 
       <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-slate-950">Kanban</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Kanban</h1>
       </section>
 
-      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-[radial-gradient(circle_at_top_left,rgba(20,94,99,0.1),transparent_30%),linear-gradient(180deg,#fffdf9_0%,#f5f1e8_100%)] p-4 md:p-5">
-        <form className="flex flex-row items-center gap-3" onSubmit={handleSearchSubmit}>
+      <section
+        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-4 md:p-5"
+        style={{ background: "var(--panel-accent-surface)" }}
+      >
+        <form
+          className="flex flex-col gap-3 lg:flex-row lg:items-center"
+          onSubmit={handleSearchSubmit}
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              className="shrink-0"
+              onClick={() => setNewContactOpen(true)}
+              type="button"
+              variant="secondary"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Novo contato</span>
+            </Button>
+            {canManageStages ? (
+              <Button
+                className="shrink-0"
+                onClick={() => setManageStagesOpen(true)}
+                type="button"
+                variant="outline"
+              >
+                <Settings2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Configurar etapas</span>
+              </Button>
+            ) : null}
+          </div>
           <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
             <Input
-              className="h-11 w-full rounded-full bg-white/95 pl-11"
+              className="h-11 w-full rounded-full pl-11"
               onChange={(event) => {
                 const nextValue = event.target.value;
                 setSearchDraft(nextValue);
@@ -582,16 +611,11 @@ export function KanbanPage({
               value={searchDraft}
             />
           </div>
-
-          <Button className="shrink-0" onClick={() => setNewContactOpen(true)} type="button" variant="secondary">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Novo contato</span>
-          </Button>
         </form>
         {searchQuery.trim() ? (
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-[var(--muted-foreground)]">
             {filteredCardCount} resultado{filteredCardCount === 1 ? "" : "s"} para{" "}
-            <span className="font-semibold text-slate-800">{searchQuery.trim()}</span>
+            <span className="font-semibold text-[var(--foreground)]">{searchQuery.trim()}</span>
           </p>
         ) : null}
       </section>
@@ -615,11 +639,14 @@ export function KanbanPage({
         </div>
         <DragOverlay zIndex={2000}>
           {activeDragCard ? (
-            <div className="surface-shadow pointer-events-none w-[19rem] rounded-[1.5rem] border border-[var(--primary)] bg-white/95 p-4">
-              <p className="text-sm font-semibold text-slate-950">
+            <div
+              className="surface-shadow pointer-events-none w-[19rem] rounded-[1.5rem] border border-[var(--primary)] p-4"
+              style={{ background: "var(--card)" }}
+            >
+              <p className="text-sm font-semibold text-[var(--foreground)]">
                 {activeDragCard.contact.name}
               </p>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
                 {activeDragCard.contact.phone}
               </p>
             </div>

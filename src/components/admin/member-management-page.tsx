@@ -1,11 +1,22 @@
 "use client";
 
-import { LayoutDashboard, LoaderCircle, Pencil, Plus, Trash2, UserX, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  LoaderCircle,
+  LockKeyhole,
+  Pencil,
+  Plus,
+  SunMoon,
+  Trash2,
+  UserX,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
+import { useTheme } from "@/components/theme/theme-provider";
+import { ResetPasswordDialog } from "@/components/kanban/reset-password-dialog";
 import type { UserManagementItem } from "@/lib/app.types";
 import { requestApi } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
@@ -16,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { FormAutofillGuard } from "@/components/ui/form-autofill-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -23,6 +35,7 @@ type MemberManagementPageProps = {
   companyId: string;
   companyName: string;
   initialUsers: UserManagementItem[];
+  userEmail: string;
   viewerName: string;
 };
 
@@ -64,14 +77,17 @@ export function MemberManagementPage({
   companyId,
   companyName,
   initialUsers,
+  userEmail,
   viewerName,
 }: MemberManagementPageProps) {
   const router = useRouter();
+  const { toggleTheme } = useTheme();
   const [users, setUsers] = useState(initialUsers);
   const [createForm, setCreateForm] = useState<CreateMemberForm>(emptyCreateForm);
   const [isCreating, setIsCreating] = useState(false);
   const [editingUser, setEditingUser] = useState<EditMemberForm | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
 
   const submitCreate = async () => {
     setIsCreating(true);
@@ -191,24 +207,40 @@ export function MemberManagementPage({
             onSelect: () => router.push("/negociacoes"),
           },
           {
-            icon: Users,
-            label: "Usuarios",
-            onSelect: () => router.push("/usuarios"),
+            icon: SunMoon,
+            label: "Alternar tema (Claro / Escuro)",
+            onSelect: toggleTheme,
+          },
+          {
+            icon: LockKeyhole,
+            label: "Redefinir senha",
+            onSelect: () => setResetPasswordOpen(true),
           },
         ]}
         roleLabel={viewerName}
       />
 
       <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-slate-950">Gestao de usuarios</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestao de usuarios</h1>
       </section>
 
-      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
+      <section
+        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
+        style={{ background: "var(--panel-surface)" }}
+      >
         <div className="mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-slate-950">Novo usuario</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuario</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <form
+          autoComplete="off"
+          className="grid gap-4 md:grid-cols-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void submitCreate();
+          }}
+        >
+          <FormAutofillGuard />
           <div className="space-y-2">
             <Label htmlFor="member-name">Nome</Label>
             <Input
@@ -222,7 +254,9 @@ export function MemberManagementPage({
           <div className="space-y-2">
             <Label htmlFor="member-email">E-mail</Label>
             <Input
+              autoComplete="off"
               id="member-email"
+              name="member-email"
               onChange={(event) =>
                 setCreateForm((current) => ({ ...current, email: event.target.value }))
               }
@@ -232,7 +266,9 @@ export function MemberManagementPage({
           <div className="space-y-2">
             <Label htmlFor="member-password">Senha</Label>
             <Input
+              autoComplete="new-password"
               id="member-password"
+              name="member-password"
               onChange={(event) =>
                 setCreateForm((current) => ({ ...current, password: event.target.value }))
               }
@@ -243,7 +279,9 @@ export function MemberManagementPage({
           <div className="space-y-2">
             <Label htmlFor="member-password-confirm">Confirmar senha</Label>
             <Input
+              autoComplete="new-password"
               id="member-password-confirm"
+              name="member-password-confirm"
               onChange={(event) =>
                 setCreateForm((current) => ({
                   ...current,
@@ -254,31 +292,36 @@ export function MemberManagementPage({
               value={createForm.confirmPassword}
             />
           </div>
-        </div>
-        <div className="mt-4 flex justify-end">
-          <Button disabled={isCreating} onClick={submitCreate} type="button">
-            {isCreating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Criar usuario
-          </Button>
-        </div>
+          <div className="md:col-span-2 mt-4 flex justify-end">
+            <Button disabled={isCreating} type="submit">
+              {isCreating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Criar usuario
+            </Button>
+          </div>
+        </form>
       </section>
 
       <section className="mt-4 space-y-3">
         {users.map((user) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 bg-white/90 p-4"
+            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
             key={user.id}
+            style={{ background: "var(--panel-surface)" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-base font-semibold text-slate-950">{user.name}</p>
-                <p className="text-sm text-slate-600">{user.email}</p>
+                <p className="text-base font-semibold text-[var(--foreground)]">{user.name}</p>
+                <p className="text-sm text-[var(--muted-foreground)]">{user.email}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <span
+                  className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+                  style={{ background: "var(--subtle-surface)" }}
+                >
                   {user.status === "active" ? "Ativo" : "Inativo"}
                 </span>
                 <Button
+                  className="hover:border-slate-300 hover:bg-[var(--subtle-surface)]"
                   onClick={() => setEditingUser(buildEditForm(user))}
                   type="button"
                   variant="outline"
@@ -286,11 +329,21 @@ export function MemberManagementPage({
                   <Pencil className="h-4 w-4" />
                   Editar
                 </Button>
-                <Button onClick={() => toggleStatus(user)} type="button" variant="outline">
+                <Button
+                  className="hover:border-slate-300 hover:bg-[var(--subtle-surface)]"
+                  onClick={() => toggleStatus(user)}
+                  type="button"
+                  variant="outline"
+                >
                   <UserX className="h-4 w-4" />
                   {user.status === "active" ? "Inativar" : "Reativar"}
                 </Button>
-                <Button onClick={() => deleteUser(user)} type="button" variant="ghost">
+                <Button
+                  className="hover:bg-[var(--subtle-surface)]"
+                  onClick={() => deleteUser(user)}
+                  type="button"
+                  variant="ghost"
+                >
                   <Trash2 className="h-4 w-4 text-[var(--danger)]" />
                   Excluir
                 </Button>
@@ -315,7 +368,15 @@ export function MemberManagementPage({
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (
-            <div className="space-y-4">
+            <form
+              autoComplete="off"
+              className="space-y-4"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveEdit();
+              }}
+            >
+              <FormAutofillGuard />
               <div className="space-y-2">
                 <Label htmlFor="edit-member-name">Nome</Label>
                 <Input
@@ -331,7 +392,9 @@ export function MemberManagementPage({
               <div className="space-y-2">
                 <Label htmlFor="edit-member-email">E-mail</Label>
                 <Input
+                  autoComplete="off"
                   id="edit-member-email"
+                  name="edit-member-email"
                   onChange={(event) =>
                     setEditingUser((current) =>
                       current ? { ...current, email: event.target.value } : current,
@@ -343,7 +406,7 @@ export function MemberManagementPage({
               <div className="space-y-2">
                 <Label htmlFor="edit-member-status">Status</Label>
                 <select
-                  className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                  className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
                   id="edit-member-status"
                   onChange={(event) =>
                     setEditingUser((current) =>
@@ -365,7 +428,9 @@ export function MemberManagementPage({
                 <div className="space-y-2">
                   <Label htmlFor="edit-member-password">Nova senha</Label>
                   <Input
+                    autoComplete="new-password"
                     id="edit-member-password"
+                    name="edit-member-password"
                     onChange={(event) =>
                       setEditingUser((current) =>
                         current ? { ...current, password: event.target.value } : current,
@@ -378,7 +443,9 @@ export function MemberManagementPage({
                 <div className="space-y-2">
                   <Label htmlFor="edit-member-confirm">Confirmar senha</Label>
                   <Input
+                    autoComplete="new-password"
                     id="edit-member-confirm"
+                    name="edit-member-confirm"
                     onChange={(event) =>
                       setEditingUser((current) =>
                         current
@@ -395,15 +462,21 @@ export function MemberManagementPage({
                 <Button onClick={() => setEditingUser(null)} type="button" variant="ghost">
                   Cancelar
                 </Button>
-                <Button disabled={isSavingEdit} onClick={saveEdit} type="button">
+                <Button disabled={isSavingEdit} type="submit">
                   {isSavingEdit ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
                   Salvar alteracoes
                 </Button>
               </div>
-            </div>
+            </form>
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <ResetPasswordDialog
+        onOpenChange={setResetPasswordOpen}
+        open={resetPasswordOpen}
+        userEmail={userEmail}
+      />
     </main>
   );
 }

@@ -38,7 +38,7 @@ function QuickAction({
   return (
     <a
       aria-label={label}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-foreground)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
       href={href}
       onClick={(event) => event.stopPropagation()}
       rel="noreferrer"
@@ -71,14 +71,15 @@ export function DealCard({
   const mailtoUrl = buildMailtoUrl(card.contact.email);
   const style = !isDragging && transform
     ? {
+        background: "var(--card)",
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
       }
-    : undefined;
+    : { background: "var(--card)" };
 
   return (
     <article
       className={cn(
-        "surface-shadow cursor-pointer rounded-[1.5rem] border border-white/70 bg-white/95 p-4 transition-transform hover:-translate-y-0.5",
+        "surface-shadow cursor-pointer rounded-[1.5rem] border border-white/70 p-4 transition-transform hover:-translate-y-0.5",
         isDragging && "pointer-events-none opacity-0",
       )}
       onClick={() => onOpenDetails(card.id)}
@@ -87,14 +88,16 @@ export function DealCard({
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold text-slate-950">
+          <h3 className="text-base font-semibold text-[var(--foreground)]">
             {card.contact.name}
           </h3>
-          <p className="text-sm text-slate-600">{formatPhone(card.contact.phone)}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {formatPhone(card.contact.phone)}
+          </p>
         </div>
         <button
           aria-label="Arrastar card"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition-colors hover:text-slate-950"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
           onClick={(event) => event.stopPropagation()}
           type="button"
           {...draggableAttributes}
@@ -109,7 +112,10 @@ export function DealCard({
             {card.contact.origin}
           </span>
         ) : null}
-        <span className="inline-flex rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
+        <span
+          className="inline-flex rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+          style={{ background: "var(--subtle-surface)" }}
+        >
           {card.assignedUser ? `Assinado: ${card.assignedUser.name}` : "Sem assinar"}
         </span>
       </div>
@@ -119,7 +125,10 @@ export function DealCard({
           <QuickAction href={telUrl} icon={Phone} label="Telefone" />
           <QuickAction href={mailtoUrl} icon={Mail} label="E-mail" />
         </div>
-        <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
+        <div
+          className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+          style={{ background: "var(--subtle-surface)" }}
+        >
           {card.notes.length} nota{card.notes.length === 1 ? "" : "s"}
         </div>
       </div>

@@ -5,6 +5,13 @@
   --foreground: #13232e;
   --card: #fffdf8;
   --card-foreground: #13232e;
+  --header-surface: linear-gradient(180deg, #fffdf9 0%, #f4efe5 100%);
+  --panel-surface: rgba(255, 255, 255, 0.9);
+  --panel-accent-surface:
+    radial-gradient(circle at top left, rgba(20, 94, 99, 0.1), transparent 30%),
+    linear-gradient(180deg, #fffdf9 0%, #f5f1e8 100%);
+  --subtle-surface: rgba(248, 250, 252, 0.75);
+  --input-surface: rgba(255, 255, 255, 0.95);
   --muted: #dce5de;
   --muted-foreground: #5f6b64;
   --border: rgba(19, 35, 46, 0.12);
@@ -15,6 +22,38 @@
   --secondary-foreground: #25464b;
   --danger: #b9382f;
   --shadow-color: rgba(14, 31, 41, 0.08);
+  --page-background:
+    radial-gradient(circle at top left, rgba(20, 94, 99, 0.12), transparent 30%),
+    radial-gradient(circle at top right, rgba(201, 154, 63, 0.08), transparent 22%),
+    linear-gradient(180deg, #f6f2eb 0%, #f2efe7 100%);
+}
+
+[data-theme="dark"] {
+  --background: #0f1720;
+  --foreground: #e6edf3;
+  --card: #15212c;
+  --card-foreground: #e6edf3;
+  --header-surface: linear-gradient(180deg, #17242f 0%, #111b24 100%);
+  --panel-surface: rgba(21, 33, 44, 0.92);
+  --panel-accent-surface:
+    radial-gradient(circle at top left, rgba(45, 136, 143, 0.18), transparent 32%),
+    linear-gradient(180deg, #182530 0%, #111b24 100%);
+  --subtle-surface: rgba(30, 41, 59, 0.72);
+  --input-surface: rgba(18, 28, 38, 0.96);
+  --muted: #243341;
+  --muted-foreground: #9fb0bd;
+  --border: rgba(159, 176, 189, 0.18);
+  --ring: rgba(87, 190, 197, 0.3);
+  --primary: #57bec5;
+  --primary-foreground: #091218;
+  --secondary: #21323d;
+  --secondary-foreground: #d5e1e7;
+  --danger: #e0645d;
+  --shadow-color: rgba(2, 6, 23, 0.42);
+  --page-background:
+    radial-gradient(circle at top left, rgba(87, 190, 197, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(20, 94, 99, 0.16), transparent 24%),
+    linear-gradient(180deg, #0c141c 0%, #101a23 100%);
 }
 
 @theme inline {
@@ -46,10 +85,7 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(20, 94, 99, 0.12), transparent 30%),
-    radial-gradient(circle at top right, rgba(201, 154, 63, 0.08), transparent 22%),
-    linear-gradient(180deg, #f6f2eb 0%, #f2efe7 100%);
+  background: var(--page-background);
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
 }
@@ -73,6 +109,14 @@ select {
   box-shadow:
     0 1px 1px rgba(15, 23, 42, 0.03),
     0 20px 40px -24px var(--shadow-color);
+}
+
+.interactive-surface {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
 .grid-pattern {

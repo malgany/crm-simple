@@ -826,7 +826,6 @@ export async function getCompanyDetail(companyId: string) {
       .from("company_users")
       .select("*")
       .eq("company_id", companyId)
-      .neq("status", "deleted")
       .order("role", { ascending: true })
       .order("name"),
   ]);
@@ -1004,4 +1003,32 @@ export async function softDeleteCompanyUser(companyId: string, companyUserId: st
     .eq("id", companyUserId);
 
   throwIfError(error);
+}
+
+export async function restoreCompanyUser(companyId: string, companyUserId: string) {
+  const admin = getAdminClient();
+  const user = await ensureCompanyUser(companyId, companyUserId);
+
+  if (user.status !== "deleted") {
+    throw new Error("Este usuario nao esta excluido.");
+  }
+
+  const { data, error } = await admin
+    .from("company_users")
+    .update({
+      status: "inactive",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("company_id", companyId)
+    .eq("id", companyUserId)
+    .select("*")
+    .single();
+
+  throwIfError(error);
+  const restoredUser = requireData(data, "Usuario restaurado sem retorno valido.");
+
+  return {
+    ...toCompanyUserSummary(restoredUser),
+    id: restoredUser.id,
+  } satisfies UserManagementItem;
 }

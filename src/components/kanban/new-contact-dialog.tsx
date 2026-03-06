@@ -121,7 +121,7 @@ export function NewContactDialog({
           <div className="space-y-2">
             <Label htmlFor="new-contact-stage">Etapa inicial</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white/95 px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
               id="new-contact-stage"
               {...form.register("stageId")}
             >

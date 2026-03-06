@@ -69,7 +69,7 @@ function ContactShortcut({
 
   return (
     <a
-      className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+      className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--input-surface)] px-4 py-2 text-sm font-semibold text-[var(--foreground)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
       href={href}
       rel="noreferrer"
       target={href.startsWith("mailto:") || href.startsWith("tel:") ? undefined : "_blank"}
@@ -214,8 +214,11 @@ export function ContactDialog({
           </DialogHeader>
           <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
             <section className="space-y-6">
-            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/70 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <div
+              className="rounded-[1.75rem] border border-[var(--border)] p-4"
+              style={{ background: "var(--subtle-surface)" }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                 Acoes rapidas
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
@@ -234,7 +237,7 @@ export function ContactDialog({
                   </Button>
                 ) : null}
               </div>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-[var(--muted-foreground)]">
                 {card.assignedUser
                   ? `Acompanhado por ${card.assignedUser.name}.`
                   : "Nenhum usuario assinou este card ainda."}
@@ -296,12 +299,15 @@ export function ContactDialog({
                 </Button>
               </div>
             </form>
-            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/70 p-4">
+            <div
+              className="rounded-[1.75rem] border border-[var(--border)] p-4"
+              style={{ background: "var(--subtle-surface)" }}
+            >
               <div className="flex items-end gap-3">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor="move-stage">Mover para etapa</Label>
                   <select
-                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
                     id="move-stage"
                     onChange={(event) => setSelectedStageId(event.target.value)}
                     value={selectedStageId}
@@ -332,10 +338,13 @@ export function ContactDialog({
             </div>
           </section>
           <section className="space-y-5">
-            <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/70 p-4">
+            <div
+              className="rounded-[1.75rem] border border-[var(--border)] p-4"
+              style={{ background: "var(--subtle-surface)" }}
+            >
               <div className="mb-4 flex items-center gap-2">
                 <NotebookPen className="h-4 w-4 text-[var(--primary)]" />
-                <h3 className="text-lg font-semibold text-slate-950">
+                <h3 className="text-lg font-semibold text-[var(--foreground)]">
                   Observacoes
                 </h3>
               </div>
@@ -366,17 +375,21 @@ export function ContactDialog({
               {card.notes.length ? (
                 card.notes.map((note) => (
                   <article
-                    className="rounded-[1.5rem] border border-slate-200 bg-white/90 p-4"
+                    className="rounded-[1.5rem] border border-[var(--border)] p-4"
                     key={note.id}
+                    style={{ background: "var(--card)" }}
                   >
-                    <p className="text-sm leading-6 text-slate-700">{note.body}</p>
-                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    <p className="text-sm leading-6 text-[var(--foreground)]">{note.body}</p>
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
                       {note.authorName} • {formatDateTime(note.createdAt)}
                     </p>
                   </article>
                 ))
               ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white/70 p-6 text-center text-sm text-slate-500">
+                <div
+                  className="rounded-[1.5rem] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
+                  style={{ background: "var(--panel-surface)" }}
+                >
                   Ainda nao ha observacoes para {card.contact.name}. O telefone
                   principal e {formatPhone(card.contact.phone)}.
                 </div>

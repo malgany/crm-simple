@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -24,19 +26,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body
         suppressHydrationWarning
         className={`${manrope.variable} ${jetbrainsMono.variable} bg-[var(--background)] text-[var(--foreground)] antialiased`}
       >
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
         <Toaster
           position="top-right"
           richColors
           toastOptions={{
             classNames: {
-              toast: "border border-slate-200 bg-white text-slate-950 shadow-lg",
-              description: "text-slate-600",
+              toast: "border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)] shadow-lg",
+              description: "text-[var(--muted-foreground)]",
             },
           }}
         />

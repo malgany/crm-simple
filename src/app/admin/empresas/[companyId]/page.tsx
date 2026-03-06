@@ -1,4 +1,4 @@
-import { CompanyDetailPage } from "@/components/superadmin/company-detail-page";
+import { CompanyUsersPage } from "@/components/superadmin/company-users-page";
 import { requireSuperadminPage } from "@/lib/auth";
 import { getCompanyDetail } from "@/lib/crm";
 
@@ -13,5 +13,5 @@ export default async function CompanyDetailRoute({ params }: CompanyDetailProps)
   const { companyId } = await params;
   const detail = await getCompanyDetail(companyId);
 
-  return <CompanyDetailPage company={detail.company} initialUsers={detail.users} />;
+  return <CompanyUsersPage company={detail.company} initialUsers={detail.users} />;
 }
