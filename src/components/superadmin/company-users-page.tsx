@@ -252,7 +252,7 @@ export function CompanyUsersPage({
           },
           {
             icon: SunMoon,
-            label: "Alternar tema (Claro / Escuro)",
+            label: "Alternar tema",
             onSelect: toggleTheme,
           },
           {
@@ -563,9 +563,9 @@ export function CompanyUsersPage({
                       setEditingUser((current) =>
                         current
                           ? {
-                              ...current,
-                              role: event.target.value as EditUserForm["role"],
-                            }
+                            ...current,
+                            role: event.target.value as EditUserForm["role"],
+                          }
                           : current,
                       )
                     }
@@ -584,9 +584,9 @@ export function CompanyUsersPage({
                       setEditingUser((current) =>
                         current
                           ? {
-                              ...current,
-                              status: event.target.value as EditUserForm["status"],
-                            }
+                            ...current,
+                            status: event.target.value as EditUserForm["status"],
+                          }
                           : current,
                       )
                     }

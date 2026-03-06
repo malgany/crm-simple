@@ -118,7 +118,7 @@ export function KanbanPage({
   const mutationCountRef = useRef(0);
   const refreshInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
-  const refreshBoardRef = useRef<() => Promise<void>>(async () => {});
+  const refreshBoardRef = useRef<() => Promise<void>>(async () => { });
 
   const isBoardLocked = () =>
     dragDealIdRef.current !== null ||
@@ -423,12 +423,12 @@ export function KanbanPage({
     const optimisticAssignedUser: CompanyUserSummary | null =
       assignedUserId === viewer.id
         ? {
-            auth_user_id: viewer.id,
-            email: viewer.email,
-            name: viewer.name,
-            role: viewer.role === "admin" ? "admin" : "member",
-            status: "active",
-          }
+          auth_user_id: viewer.id,
+          email: viewer.email,
+          name: viewer.name,
+          role: viewer.role === "admin" ? "admin" : "member",
+          status: "active",
+        }
         : null;
 
     beginMutation();
@@ -527,29 +527,29 @@ export function KanbanPage({
   const menuItems = [
     ...(viewer.isSuperadmin || canManageUsers
       ? [{
-          icon: Users,
-          label: "Usuarios",
-          onSelect: () => router.push(usersPath),
-        }]
+        icon: Users,
+        label: "Usuarios",
+        onSelect: () => router.push(usersPath),
+      }]
       : []),
     {
       icon: SunMoon,
-      label: "Alternar tema (Claro / Escuro)",
+      label: "Alternar tema",
       onSelect: toggleTheme,
     },
     ...(!viewer.isSuperadmin
       ? [{
-          icon: LockKeyhole,
-          label: "Redefinir senha",
-          onSelect: () => setResetPasswordOpen(true),
-        }]
+        icon: LockKeyhole,
+        label: "Redefinir senha",
+        onSelect: () => setResetPasswordOpen(true),
+      }]
       : []),
     ...(viewer.isSuperadmin
       ? [{
-          icon: Shield,
-          label: "Voltar para empresas",
-          onSelect: () => router.push("/admin/empresas"),
-        }]
+        icon: Shield,
+        label: "Voltar para empresas",
+        onSelect: () => router.push("/admin/empresas"),
+      }]
       : []),
   ];
 
