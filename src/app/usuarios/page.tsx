@@ -34,6 +34,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       companyId={context.company!.id}
       companyName={context.company!.name}
       initialUsers={users}
+      viewerName="Admin"
     />
   );
 }

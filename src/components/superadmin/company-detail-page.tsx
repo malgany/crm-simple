@@ -4,6 +4,7 @@ import { LoaderCircle, Pencil, Plus, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SignOutButton } from "@/components/auth/signout-button";
 import type { CompanySummary, UserManagementItem } from "@/lib/app.types";
 import { requestApi } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
@@ -176,19 +177,24 @@ export function CompanyDetailPage({
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
       <section className="surface-shadow rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-          Superadmin
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-          {companyState.name}
-        </h1>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button asChild type="button" variant="outline">
-            <Link href="/admin/empresas">Voltar para empresas</Link>
-          </Button>
-          <Button asChild type="button" variant="secondary">
-            <Link href={`/negociacoes?companyId=${companyState.id}`}>Entrar na empresa</Link>
-          </Button>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
+              Superadmin
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+              {companyState.name}
+            </h1>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Button asChild type="button" variant="outline">
+                <Link href="/admin/empresas">Voltar para empresas</Link>
+              </Button>
+              <Button asChild type="button" variant="secondary">
+                <Link href={`/negociacoes?companyId=${companyState.id}`}>Entrar na empresa</Link>
+              </Button>
+            </div>
+          </div>
+          <SignOutButton label="Sair" />
         </div>
       </section>
 
@@ -288,7 +294,7 @@ export function CompanyDetailPage({
               value={createForm.role}
             >
               <option value="admin">Admin</option>
-              <option value="member">Usuario comum</option>
+              <option value="member">Usuario</option>
             </select>
           </div>
           <div className="space-y-2">
@@ -326,7 +332,7 @@ export function CompanyDetailPage({
               <div>
                 <p className="text-base font-semibold text-slate-950">{user.name}</p>
                 <p className="text-sm text-slate-600">
-                  {user.email} • {user.role === "admin" ? "Admin" : "Usuario comum"}
+                  {user.email} • {user.role === "admin" ? "Admin" : "Usuario"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -397,7 +403,7 @@ export function CompanyDetailPage({
                     value={editingUser.role}
                   >
                     <option value="admin">Admin</option>
-                    <option value="member">Usuario comum</option>
+                    <option value="member">Usuario</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -465,3 +471,4 @@ export function CompanyDetailPage({
     </main>
   );
 }
+

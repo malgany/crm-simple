@@ -39,7 +39,6 @@ export function LoginForm() {
       return;
     }
 
-    toast.success("Login realizado.");
     router.replace(nextPath);
     router.refresh();
   });

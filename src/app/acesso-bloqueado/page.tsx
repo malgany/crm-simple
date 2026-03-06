@@ -9,7 +9,7 @@ export default function BlockedAccessPage() {
       title="Acesso indisponivel"
     >
       <div className="rounded-[1.75rem] border border-[rgba(185,56,47,0.2)] bg-[rgba(185,56,47,0.08)] p-5 text-sm leading-6 text-slate-700">
-        Se voce acredita que isso e um erro, procure o admin da sua empresa ou o superadmin do sistema.
+        Se voce acredita que isso e um erro, procure o admin da sua empresa.
       </div>
       <SignOutButton className="w-full" label="Sair desta sessao" />
     </AuthCard>

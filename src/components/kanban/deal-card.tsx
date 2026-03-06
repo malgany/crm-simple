@@ -5,7 +5,6 @@ import {
   GripVertical,
   Mail,
   MessageCircleMore,
-  NotebookPen,
   Phone,
 } from "lucide-react";
 import {
@@ -22,7 +21,6 @@ type DealCardProps = {
   card: KanbanCard;
   onAssignToggle: (dealId: string, assignedUserId: string | null) => void;
   onOpenDetails: (dealId: string) => void;
-  onOpenNotes: (dealId: string) => void;
   stageId: string;
   viewerId: string;
 };
@@ -59,7 +57,6 @@ export function DealCard({
   card,
   onAssignToggle,
   onOpenDetails,
-  onOpenNotes,
   stageId,
   viewerId,
 }: DealCardProps) {
@@ -139,20 +136,9 @@ export function DealCard({
               }}
               type="button"
             >
-              {card.assignedUser?.auth_user_id === viewerId ? "Liberar" : "Assinar para mim"}
+              {card.assignedUser?.auth_user_id === viewerId ? "Liberar" : "Assinar"}
             </button>
           ) : null}
-          <button
-            aria-label="Abrir observacoes"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpenNotes(card.id);
-            }}
-            type="button"
-          >
-            <NotebookPen className="h-4 w-4" />
-          </button>
         </div>
         <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
           {card.notes.length} nota{card.notes.length === 1 ? "" : "s"}

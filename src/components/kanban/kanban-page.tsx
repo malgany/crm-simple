@@ -2,9 +2,6 @@
 
 import { DndContext, DragOverlay, closestCorners, type DragEndEvent } from "@dnd-kit/core";
 import {
-  LoaderCircle,
-  LogOut,
-  MoreHorizontal,
   Plus,
   Search,
   Shield,
@@ -21,6 +18,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { AppHeader } from "@/components/layout/app-header";
 import { ContactDialog } from "@/components/kanban/contact-dialog";
 import {
   ManageStagesDialog,
@@ -50,7 +48,6 @@ import {
   updateCardAssignment,
   updateCardContact,
 } from "@/lib/kanban";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { ContactSchema, NoteSchema, UpdateContactSchema } from "@/lib/validation";
 import { getErrorMessage, normalizeOptionalText, normalizePhone } from "@/lib/utils";
 
@@ -88,7 +85,6 @@ export function KanbanPage({
   viewer,
 }: KanbanPageProps) {
   const router = useRouter();
-  const supabase = createBrowserSupabaseClient();
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,8 +93,6 @@ export function KanbanPage({
   const [dialogFocus, setDialogFocus] = useState<"details" | "notes">("details");
   const [newContactOpen, setNewContactOpen] = useState(false);
   const [manageStagesOpen, setManageStagesOpen] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
   const deferredSearch = useDeferredValue(searchQuery);
   const filteredStages = filterStages(stages, deferredSearch);
   const filteredCardCount = useMemo(
@@ -108,7 +102,6 @@ export function KanbanPage({
   );
   const selectedCard = findCard(stages, selectedDealId);
   const activeDragCard = findCard(stages, dragDealId);
-  const menuRef = useRef<HTMLDivElement | null>(null);
   const mountedRef = useRef(true);
   const dragDealIdRef = useRef<string | null>(null);
   const selectedDealIdRef = useRef<string | null>(null);
@@ -218,32 +211,6 @@ export function KanbanPage({
       void refreshBoardRef.current();
     }
   }, [dragDealId, manageStagesOpen, newContactOpen, selectedDealId]);
-
-  useEffect(() => {
-    if (!menuOpen) {
-      return;
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!menuRef.current?.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [menuOpen]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -484,21 +451,6 @@ export function KanbanPage({
     }
   };
 
-  const handleSignOut = async () => {
-    setMenuOpen(false);
-    setIsSigningOut(true);
-    const { error } = await supabase.auth.signOut();
-    setIsSigningOut(false);
-
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-
-    router.replace("/login");
-    router.refresh();
-  };
-
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSearchQuery(searchDraft);
@@ -527,103 +479,46 @@ export function KanbanPage({
   const usersPath = viewer.isSuperadmin
     ? `/usuarios?companyId=${companyId}`
     : "/usuarios";
+  const roleLabel = viewer.isSuperadmin
+    ? "Superadmin"
+    : viewer.role === "admin"
+      ? "Admin"
+      : "Usuario";
+  const menuItems = [
+    ...(canManageStages
+      ? [{
+          icon: Settings2,
+          label: "Configurar etapas",
+          onSelect: () => setManageStagesOpen(true),
+        }]
+      : []),
+    ...(canManageUsers
+      ? [{
+          icon: Users,
+          label: "Usuarios",
+          onSelect: () => router.push(usersPath),
+        }]
+      : []),
+    ...(viewer.isSuperadmin
+      ? [{
+          icon: Shield,
+          label: "Voltar para empresas",
+          onSelect: () => router.push("/admin/empresas"),
+        }]
+      : []),
+  ];
 
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
-      <header className="surface-shadow flex items-center justify-between gap-4 rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
-        <div>
-          <p className="text-lg font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
-            CRM
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            {viewer.companyName} • {viewer.isSuperadmin ? "Superadmin em contexto" : viewer.role}
-          </p>
-        </div>
-        <div className="relative" ref={menuRef}>
-          <Button
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            className="rounded-full"
-            onClick={() => setMenuOpen((current) => !current)}
-            size="icon"
-            type="button"
-            variant="outline"
-          >
-            <MoreHorizontal className="h-5 w-5" />
-          </Button>
-          {menuOpen ? (
-            <div className="surface-shadow absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 rounded-[1.5rem] border border-white/70 bg-white/95 p-3">
-              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                  Conta
-                </p>
-                <p className="mt-2 truncate text-sm font-semibold text-slate-950">
-                  {viewer.email}
-                </p>
-                <p className="text-sm text-slate-600">{viewer.name}</p>
-              </div>
-              <div className="mt-3 flex flex-col gap-2">
-                {canManageStages ? (
-                  <Button
-                    className="w-full justify-start rounded-[1rem]"
-                    onClick={() => {
-                      setManageStagesOpen(true);
-                      setMenuOpen(false);
-                    }}
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Settings2 className="h-4 w-4" />
-                    Configurar etapas
-                  </Button>
-                ) : null}
-                {canManageUsers ? (
-                  <Button
-                    className="w-full justify-start rounded-[1rem]"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      router.push(usersPath);
-                    }}
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Users className="h-4 w-4" />
-                    Usuarios
-                  </Button>
-                ) : null}
-                {viewer.isSuperadmin ? (
-                  <Button
-                    className="w-full justify-start rounded-[1rem]"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      router.push("/admin/empresas");
-                    }}
-                    type="button"
-                    variant="ghost"
-                  >
-                    <Shield className="h-4 w-4" />
-                    Voltar para empresas
-                  </Button>
-                ) : null}
-                <Button
-                  className="w-full justify-start rounded-[1rem]"
-                  disabled={isSigningOut}
-                  onClick={handleSignOut}
-                  type="button"
-                  variant="ghost"
-                >
-                  {isSigningOut ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <LogOut className="h-4 w-4" />
-                  )}
-                  Sair
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </header>
+      <AppHeader
+        companyName={viewer.companyName}
+        menuItems={menuItems}
+        roleLabel={roleLabel}
+      />
+
+      <section className="mt-4 px-1">
+        <h1 className="text-2xl font-semibold text-slate-950">Kanban</h1>
+      </section>
 
       <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-[radial-gradient(circle_at_top_left,rgba(20,94,99,0.1),transparent_30%),linear-gradient(180deg,#fffdf9_0%,#f5f1e8_100%)] p-4 md:p-5">
         <form className="flex flex-row items-center gap-3" onSubmit={handleSearchSubmit}>
@@ -674,7 +569,6 @@ export function KanbanPage({
                 void handleAssignDeal(dealId, assignedUserId);
               }}
               onOpenDetails={(dealId) => openDeal(dealId, "details")}
-              onOpenNotes={(dealId) => openDeal(dealId, "notes")}
               stage={stage}
               viewerId={viewer.id}
             />
@@ -723,3 +617,4 @@ export function KanbanPage({
     </main>
   );
 }
+

@@ -1,9 +1,11 @@
 "use client";
 
-import { LoaderCircle, Pencil, Plus, Trash2, UserX } from "lucide-react";
+import { LayoutDashboard, LoaderCircle, Pencil, Plus, Trash2, UserX, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { AppHeader } from "@/components/layout/app-header";
 import type { UserManagementItem } from "@/lib/app.types";
 import { requestApi } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
@@ -21,6 +23,7 @@ type MemberManagementPageProps = {
   companyId: string;
   companyName: string;
   initialUsers: UserManagementItem[];
+  viewerName: string;
 };
 
 type CreateMemberForm = {
@@ -61,7 +64,9 @@ export function MemberManagementPage({
   companyId,
   companyName,
   initialUsers,
+  viewerName,
 }: MemberManagementPageProps) {
+  const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
   const [createForm, setCreateForm] = useState<CreateMemberForm>(emptyCreateForm);
   const [isCreating, setIsCreating] = useState(false);
@@ -177,27 +182,31 @@ export function MemberManagementPage({
 
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
-      <section className="surface-shadow rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-          Usuarios
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">
-          Gestao de usuarios comuns
-        </h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Empresa: <strong>{companyName}</strong>
-        </p>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Button asChild type="button" variant="outline">
-            <Link href="/negociacoes">Voltar ao Kanban</Link>
-          </Button>
-        </div>
+      <AppHeader
+        companyName={companyName}
+        menuItems={[
+          {
+            icon: LayoutDashboard,
+            label: "Kanban",
+            onSelect: () => router.push("/negociacoes"),
+          },
+          {
+            icon: Users,
+            label: "Usuarios",
+            onSelect: () => router.push("/usuarios"),
+          },
+        ]}
+        roleLabel={viewerName}
+      />
+
+      <section className="mt-4 px-1">
+        <h1 className="text-2xl font-semibold text-slate-950">Gestao de usuarios</h1>
       </section>
 
       <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
         <div className="mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-slate-950">Novo usuario comum</h2>
+          <h2 className="text-lg font-semibold text-slate-950">Novo usuario</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -291,12 +300,18 @@ export function MemberManagementPage({
         ))}
       </section>
 
+      <div className="mt-4 flex justify-start">
+        <Button asChild type="button" variant="outline">
+          <Link href="/negociacoes">Voltar ao Kanban</Link>
+        </Button>
+      </div>
+
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar usuario</DialogTitle>
             <DialogDescription>
-              Atualize dados do usuario comum ou altere o status de acesso.
+              Atualize dados do usuario ou altere o status de acesso.
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (

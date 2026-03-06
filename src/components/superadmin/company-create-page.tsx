@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SignOutButton } from "@/components/auth/signout-button";
 import type { CompanyUserDraft } from "@/lib/app.types";
 import { requestApi } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
@@ -57,17 +58,22 @@ export function CompanyCreatePage() {
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
       <section className="surface-shadow rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
-          Superadmin
-        </p>
-        <h1 className="mt-2 text-2xl font-semibold text-slate-950">Nova empresa</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Cadastre a empresa e os usuarios iniciais. Pelo menos um admin ativo e obrigatorio.
-        </p>
-        <div className="mt-4">
-          <Button asChild type="button" variant="outline">
-            <Link href="/admin/empresas">Voltar para empresas</Link>
-          </Button>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
+              Superadmin
+            </p>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950">Nova empresa</h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Cadastre a empresa e os usuarios iniciais. Pelo menos um admin ativo e obrigatorio.
+            </p>
+            <div className="mt-4">
+              <Button asChild type="button" variant="outline">
+                <Link href="/admin/empresas">Voltar para empresas</Link>
+              </Button>
+            </div>
+          </div>
+          <SignOutButton label="Sair" />
         </div>
       </section>
 
@@ -183,7 +189,7 @@ export function CompanyCreatePage() {
                   value={user.role}
                 >
                   <option value="admin">Admin</option>
-                  <option value="member">Usuario comum</option>
+                  <option value="member">Usuario</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -230,3 +236,4 @@ export function CompanyCreatePage() {
     </main>
   );
 }
+

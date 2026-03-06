@@ -11,7 +11,6 @@ type StageColumnProps = {
   onAssignToggle: (dealId: string, assignedUserId: string | null) => void;
   stage: Stage;
   onOpenDetails: (dealId: string) => void;
-  onOpenNotes: (dealId: string) => void;
   viewerId: string;
 };
 
@@ -20,7 +19,6 @@ export function StageColumn({
   onAssignToggle,
   stage,
   onOpenDetails,
-  onOpenNotes,
   viewerId,
 }: StageColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -60,7 +58,6 @@ export function StageColumn({
               key={card.id}
               onAssignToggle={onAssignToggle}
               onOpenDetails={onOpenDetails}
-              onOpenNotes={onOpenNotes}
               stageId={stage.id}
               viewerId={viewerId}
             />
