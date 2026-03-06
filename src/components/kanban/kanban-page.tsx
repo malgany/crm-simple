@@ -4,12 +4,19 @@ import { DndContext, DragOverlay, closestCorners, type DragEndEvent } from "@dnd
 import {
   LoaderCircle,
   LogOut,
+  MoreHorizontal,
   Plus,
   Search,
   Settings2,
-  Workflow,
 } from "lucide-react";
-import { useDeferredValue, useMemo, useState } from "react";
+import {
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ContactDialog } from "@/components/kanban/contact-dialog";
@@ -27,6 +34,7 @@ import type {
   MoveDealInput,
   Stage,
 } from "@/lib/app.types";
+import { loadBoardData } from "@/lib/board-data";
 import {
   appendNoteToCard,
   buildBoardState,
@@ -43,6 +51,8 @@ import {
   normalizeOptionalText,
   normalizePhone,
 } from "@/lib/utils";
+
+const AUTO_REFRESH_MS = 15000;
 
 type KanbanPageProps = {
   initialStages: Stage[];
@@ -73,21 +83,41 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
   const router = useRouter();
   const supabase = createBrowserSupabaseClient();
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
-  const [search, setSearch] = useState("");
+  const [searchDraft, setSearchDraft] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [dragDealId, setDragDealId] = useState<string | null>(null);
   const [dialogFocus, setDialogFocus] = useState<"details" | "notes">("details");
   const [newContactOpen, setNewContactOpen] = useState(false);
   const [manageStagesOpen, setManageStagesOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const deferredSearch = useDeferredValue(search);
+  const deferredSearch = useDeferredValue(searchQuery);
   const filteredStages = filterStages(stages, deferredSearch);
+  const filteredCardCount = useMemo(
+    () =>
+      filteredStages.reduce((total, stage) => total + stage.cards.length, 0),
+    [filteredStages],
+  );
   const selectedCard = findCard(stages, selectedDealId);
   const activeDragCard = findCard(stages, dragDealId);
-  const totalCards = useMemo(
-    () => stages.reduce((sum, stage) => sum + stage.cards.length, 0),
-    [stages],
-  );
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const mountedRef = useRef(true);
+  const dragDealIdRef = useRef<string | null>(null);
+  const selectedDealIdRef = useRef<string | null>(null);
+  const newContactOpenRef = useRef(false);
+  const manageStagesOpenRef = useRef(false);
+  const mutationCountRef = useRef(0);
+  const refreshInFlightRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  const refreshBoardRef = useRef<() => Promise<void>>(async () => {});
+
+  const isBoardLocked = () =>
+    dragDealIdRef.current !== null ||
+    selectedDealIdRef.current !== null ||
+    newContactOpenRef.current ||
+    manageStagesOpenRef.current ||
+    mutationCountRef.current > 0;
 
   const openDeal = (dealId: string, focus: "details" | "notes" = "details") => {
     setSelectedDealId(dealId);
@@ -100,6 +130,130 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       setDialogFocus("details");
     }
   };
+
+  const beginMutation = () => {
+    mutationCountRef.current += 1;
+  };
+
+  const endMutation = () => {
+    mutationCountRef.current = Math.max(0, mutationCountRef.current - 1);
+
+    if (mutationCountRef.current === 0 && pendingRefreshRef.current && !isBoardLocked()) {
+      void refreshBoard();
+    }
+  };
+
+  async function refreshBoard() {
+    if (refreshInFlightRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+
+    if (isBoardLocked()) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+
+    refreshInFlightRef.current = true;
+    pendingRefreshRef.current = false;
+
+    try {
+      const board = await loadBoardData(supabase);
+      const nextStages = buildBoardState(board.stages);
+
+      if (!mountedRef.current) {
+        return;
+      }
+
+      setStages(nextStages);
+
+      if (
+        selectedDealIdRef.current &&
+        !findCard(nextStages, selectedDealIdRef.current)
+      ) {
+        setSelectedDealId(null);
+        setDialogFocus("details");
+      }
+    } catch (error) {
+      console.error("Board refresh failed", error);
+    } finally {
+      refreshInFlightRef.current = false;
+
+      if (pendingRefreshRef.current && !isBoardLocked()) {
+        void refreshBoard();
+      }
+    }
+  }
+
+  refreshBoardRef.current = refreshBoard;
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    dragDealIdRef.current = dragDealId;
+    selectedDealIdRef.current = selectedDealId;
+    newContactOpenRef.current = newContactOpen;
+    manageStagesOpenRef.current = manageStagesOpen;
+
+    if (pendingRefreshRef.current && !isBoardLocked()) {
+      void refreshBoardRef.current();
+    }
+  }, [dragDealId, manageStagesOpen, newContactOpen, selectedDealId]);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState !== "visible") {
+        return;
+      }
+
+      void refreshBoardRef.current();
+    }, AUTO_REFRESH_MS);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void refreshBoardRef.current();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleVisibilityChange);
+    };
+  }, [supabase]);
 
   const lookupDuplicateByPhone = async (
     phoneNormalized: string,
@@ -131,29 +285,38 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       return true;
     }
 
-    const movedAt = new Date().toISOString();
-    const previousStages = stages;
-    setStages((current) => moveCardLocally(current, dealId, stageId, movedAt));
+    beginMutation();
 
-    const { error } = await supabase
-      .from("deals")
-      .update({
-        moved_at: movedAt,
-        stage_id: stageId,
-      })
-      .eq("id", dealId);
+    try {
+      const movedAt = new Date().toISOString();
+      const previousStages = stages;
+      setStages((current) => moveCardLocally(current, dealId, stageId, movedAt));
 
-    if (error) {
-      setStages(previousStages);
-      toast.error(getErrorMessage(error, "Nao foi possivel mover o card."));
-      return false;
+      const { error } = await supabase
+        .from("deals")
+        .update({
+          moved_at: movedAt,
+          stage_id: stageId,
+        })
+        .eq("id", dealId);
+
+      if (error) {
+        setStages(previousStages);
+        toast.error(getErrorMessage(error, "Nao foi possivel mover o card."));
+        return false;
+      }
+
+      pendingRefreshRef.current = true;
+      toast.success("Card movido.");
+      return true;
+    } finally {
+      endMutation();
     }
-
-    toast.success("Card movido.");
-    return true;
   };
 
   const handleCreateContact = async (values: ContactSchema) => {
+    beginMutation();
+
     try {
       const phoneNormalized = normalizePhone(values.phone);
       const duplicate = await lookupDuplicateByPhone(phoneNormalized);
@@ -213,11 +376,14 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       };
 
       setStages((current) => prependCard(current, values.stageId, newCard));
+      pendingRefreshRef.current = true;
       toast.success("Contato criado.");
       return true;
     } catch (error) {
       toast.error(getErrorMessage(error, "Nao foi possivel criar o contato."));
       return false;
+    } finally {
+      endMutation();
     }
   };
 
@@ -230,6 +396,8 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     if (!currentCard) {
       return false;
     }
+
+    beginMutation();
 
     try {
       const phoneNormalized = normalizePhone(values.phone);
@@ -273,42 +441,54 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
         return false;
       }
 
+      pendingRefreshRef.current = true;
       toast.success("Contato atualizado.");
       return true;
     } catch (error) {
       toast.error(getErrorMessage(error, "Nao foi possivel atualizar o contato."));
       return false;
+    } finally {
+      endMutation();
     }
   };
 
   const handleAddNote = async (dealId: string, values: NoteSchema) => {
-    const { data, error } = await supabase
-      .from("notes")
-      .insert({
-        body: values.body.trim(),
-        deal_id: dealId,
-      })
-      .select("*")
-      .single();
+    beginMutation();
 
-    if (error || !data) {
-      toast.error(getErrorMessage(error, "Nao foi possivel registrar a observacao."));
-      return false;
+    try {
+      const { data, error } = await supabase
+        .from("notes")
+        .insert({
+          body: values.body.trim(),
+          deal_id: dealId,
+        })
+        .select("*")
+        .single();
+
+      if (error || !data) {
+        toast.error(getErrorMessage(error, "Nao foi possivel registrar a observacao."));
+        return false;
+      }
+
+      setStages((current) =>
+        appendNoteToCard(current, dealId, {
+          body: data.body,
+          createdAt: data.created_at,
+          dealId: data.deal_id,
+          id: data.id,
+        }),
+      );
+      pendingRefreshRef.current = true;
+      toast.success("Observacao registrada.");
+      return true;
+    } finally {
+      endMutation();
     }
-
-    setStages((current) =>
-      appendNoteToCard(current, dealId, {
-        body: data.body,
-        createdAt: data.created_at,
-        dealId: data.deal_id,
-        id: data.id,
-      }),
-    );
-    toast.success("Observacao registrada.");
-    return true;
   };
 
   const handleSaveStages = async (drafts: StageDraft[]) => {
+    beginMutation();
+
     try {
       const currentStageIds = new Set(stages.map((stage) => stage.id));
       const nextExistingIds = new Set(
@@ -372,15 +552,19 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       }
 
       setStages((current) => mergeStageStructure(current, data));
+      pendingRefreshRef.current = true;
       toast.success("Etapas atualizadas.");
       return true;
     } catch (error) {
       toast.error(getErrorMessage(error, "Nao foi possivel salvar as etapas."));
       return false;
+    } finally {
+      endMutation();
     }
   };
 
   const handleSignOut = async () => {
+    setMenuOpen(false);
     setIsSigningOut(true);
     const { error } = await supabase.auth.signOut();
     setIsSigningOut(false);
@@ -392,6 +576,11 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
 
     router.replace("/login");
     router.refresh();
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearchQuery(searchDraft);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -416,86 +605,96 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
 
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
-      <section className="surface-shadow grid-pattern relative overflow-hidden rounded-[2rem] border border-white/60 bg-[radial-gradient(circle_at_top_left,rgba(20,94,99,0.14),transparent_34%),linear-gradient(180deg,#fffdf9_0%,#f5f1e8_100%)] p-6 md:p-8">
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-[var(--primary)]">
-              <Workflow className="h-4 w-4" />
-              Atendimento e vendas
+      <header className="surface-shadow flex items-center justify-between gap-4 rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
+        <p className="text-lg font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
+          CRM
+        </p>
+        <div className="relative" ref={menuRef}>
+          <Button
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="rounded-full"
+            onClick={() => setMenuOpen((current) => !current)}
+            size="icon"
+            type="button"
+            variant="outline"
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </Button>
+          {menuOpen ? (
+            <div className="surface-shadow absolute right-0 top-[calc(100%+0.75rem)] z-20 w-72 rounded-[1.5rem] border border-white/70 bg-white/95 p-3">
+              <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Conta
+                </p>
+                <p className="mt-2 truncate text-sm font-semibold text-slate-950">
+                  {userEmail}
+                </p>
+                <p className="text-sm text-slate-600">sessao autenticada</p>
+              </div>
+              <div className="mt-3 flex flex-col gap-2">
+                <Button
+                  className="w-full justify-start rounded-[1rem]"
+                  onClick={() => {
+                    setManageStagesOpen(true);
+                    setMenuOpen(false);
+                  }}
+                  type="button"
+                  variant="ghost"
+                >
+                  <Settings2 className="h-4 w-4" />
+                  Configurar etapas
+                </Button>
+                <Button
+                  className="w-full justify-start rounded-[1rem]"
+                  disabled={isSigningOut}
+                  onClick={handleSignOut}
+                  type="button"
+                  variant="ghost"
+                >
+                  {isSigningOut ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  Sair
+                </Button>
+              </div>
             </div>
-            <div className="space-y-2">
-              <h1 className="text-4xl font-semibold tracking-tight text-slate-950 md:text-5xl">
-                Negociacoes
-              </h1>
-              <p className="max-w-2xl text-base leading-7 text-slate-700">
-                Busca instantanea por nome ou telefone, observacoes para lembrar
-                o contexto e movimentos persistidos no Supabase.
-              </p>
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="surface-shadow rounded-[1.5rem] border border-white/70 bg-white/90 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Funil
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">
-                {stages.length}
-              </p>
-              <p className="text-sm text-slate-600">etapas ativas</p>
-            </div>
-            <div className="surface-shadow rounded-[1.5rem] border border-white/70 bg-white/90 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Pipeline
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-950">
-                {totalCards}
-              </p>
-              <p className="text-sm text-slate-600">cards em aberto</p>
-            </div>
-            <div className="surface-shadow rounded-[1.5rem] border border-white/70 bg-white/90 px-4 py-3">
-              <p className="truncate text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Conta
-              </p>
-              <p className="mt-2 truncate text-lg font-semibold text-slate-950">
-                {userEmail}
-              </p>
-              <p className="text-sm text-slate-600">sessao autenticada</p>
-            </div>
-          </div>
+          ) : null}
         </div>
-        <div className="mt-8 flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="relative w-full max-w-xl">
+      </header>
+
+      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-[radial-gradient(circle_at_top_left,rgba(20,94,99,0.1),transparent_30%),linear-gradient(180deg,#fffdf9_0%,#f5f1e8_100%)] p-4 md:p-5">
+        <form className="flex flex-row items-center gap-3" onSubmit={handleSearchSubmit}>
+          <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              className="h-12 rounded-full bg-white/95 pl-11"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por nome ou telefone"
-              value={search}
+              className="h-11 w-full rounded-full bg-white/95 pl-11"
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                setSearchDraft(nextValue);
+
+                if (!nextValue.trim()) {
+                  setSearchQuery("");
+                }
+              }}
+              placeholder="Buscar por nome ou telefone (Enter)"
+              value={searchDraft}
             />
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button onClick={() => setManageStagesOpen(true)} variant="outline">
-              <Settings2 className="h-4 w-4" />
-              Configurar etapas
-            </Button>
-            <Button onClick={() => setNewContactOpen(true)} variant="secondary">
-              <Plus className="h-4 w-4" />
-              Novo contato
-            </Button>
-            <Button
-              disabled={isSigningOut}
-              onClick={handleSignOut}
-              variant="ghost"
-            >
-              {isSigningOut ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              ) : (
-                <LogOut className="h-4 w-4" />
-              )}
-              Sair
-            </Button>
-          </div>
-        </div>
+
+          <Button className="shrink-0" onClick={() => setNewContactOpen(true)} type="button" variant="secondary">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Novo contato</span>
+          </Button>
+        </form>
+        {searchQuery.trim() ? (
+          <p className="mt-3 text-sm text-slate-600">
+            {filteredCardCount} resultado{filteredCardCount === 1 ? "" : "s"} para{" "}
+            <span className="font-semibold text-slate-800">{searchQuery.trim()}</span>
+          </p>
+        ) : null}
       </section>
 
       <DndContext
@@ -516,9 +715,9 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
             />
           ))}
         </div>
-        <DragOverlay>
+        <DragOverlay zIndex={2000}>
           {activeDragCard ? (
-            <div className="surface-shadow w-[19rem] rounded-[1.5rem] border border-[var(--primary)] bg-white/95 p-4">
+            <div className="surface-shadow pointer-events-none w-[19rem] rounded-[1.5rem] border border-[var(--primary)] bg-white/95 p-4">
               <p className="text-sm font-semibold text-slate-950">
                 {activeDragCard.contact.name}
               </p>

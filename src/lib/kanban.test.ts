@@ -15,7 +15,7 @@ const baseStages: Stage[] = [
           created_at: "2026-03-05T12:00:00.000Z",
           email: "ana@empresa.com",
           id: "contact-1",
-          name: "Ana Souza",
+          name: "Ána Souza",
           origin: "Instagram",
           phone: "(65) 99999-1111",
           phone_normalized: "65999991111",
@@ -43,7 +43,9 @@ const baseStages: Stage[] = [
 describe("kanban helpers", () => {
   it("filters across all columns by name or phone", () => {
     expect(filterStages(baseStages, "Ana")[0].cards).toHaveLength(1);
+    expect(filterStages(baseStages, "Souza")[0].cards).toHaveLength(1);
     expect(filterStages(baseStages, "6599999")[0].cards).toHaveLength(1);
+    expect(filterStages(baseStages, "inexistente")[0].cards).toHaveLength(0);
   });
 
   it("moves a card to another column and updates timestamp ordering", () => {

@@ -8,6 +8,14 @@ function sortCards(cards: KanbanCard[]) {
   );
 }
 
+function normalizeSearchToken(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
 export function buildBoardState(stages: Stage[]) {
   return [...stages]
     .sort((left, right) => left.position - right.position)
@@ -18,7 +26,9 @@ export function buildBoardState(stages: Stage[]) {
 }
 
 export function filterStages(stages: Stage[], rawQuery: string) {
-  const query = rawQuery.trim().toLowerCase();
+  const query = normalizeSearchToken(rawQuery);
+  const phoneQuery = normalizePhone(rawQuery);
+  const hasPhoneQuery = phoneQuery.length > 0;
 
   if (!query) {
     return buildBoardState(stages);
@@ -29,12 +39,12 @@ export function filterStages(stages: Stage[], rawQuery: string) {
     cards: stage.cards.filter((card) => {
       const phone = normalizePhone(card.contact.phone);
       const phoneNormalized = normalizePhone(card.contact.phone_normalized);
-      const name = card.contact.name.toLowerCase();
+      const name = normalizeSearchToken(card.contact.name);
 
       return (
         name.includes(query) ||
-        phone.includes(query.replace(/\D/g, "")) ||
-        phoneNormalized.includes(query.replace(/\D/g, ""))
+        (hasPhoneQuery &&
+          (phone.includes(phoneQuery) || phoneNormalized.includes(phoneQuery)))
       );
     }),
   }));

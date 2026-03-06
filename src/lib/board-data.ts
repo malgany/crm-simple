@@ -1,4 +1,3 @@
-import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { BoardData, ContactRecord, NoteItem, Stage } from "@/lib/app.types";
 import type { Database, TableRow } from "@/lib/database.types";

@@ -65,11 +65,14 @@ export function DealCard({
       },
       id: card.id,
     });
+  const { "aria-describedby": _ariaDescription, ...draggableAttributes } =
+    attributes;
+  void _ariaDescription;
 
   const whatsappUrl = buildWhatsappUrl(card.contact.phone);
   const telUrl = buildTelUrl(card.contact.phone);
   const mailtoUrl = buildMailtoUrl(card.contact.email);
-  const style = transform
+  const style = !isDragging && transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
       }
@@ -79,7 +82,7 @@ export function DealCard({
     <article
       className={cn(
         "surface-shadow cursor-pointer rounded-[1.5rem] border border-white/70 bg-white/95 p-4 transition-transform hover:-translate-y-0.5",
-        isDragging && "z-20 rotate-[1deg] border-[var(--primary)] shadow-2xl",
+        isDragging && "pointer-events-none opacity-0",
       )}
       onClick={() => onOpenDetails(card.id)}
       ref={setNodeRef}
@@ -97,7 +100,7 @@ export function DealCard({
           className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-500 transition-colors hover:text-slate-950"
           onClick={(event) => event.stopPropagation()}
           type="button"
-          {...attributes}
+          {...draggableAttributes}
           {...listeners}
         >
           <GripVertical className="h-4 w-4" />
