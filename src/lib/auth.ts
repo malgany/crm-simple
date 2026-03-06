@@ -117,7 +117,8 @@ export async function getAppContext(options?: {
   } = await supabase.auth.getUser();
 
   if (error) {
-    throw new Error(error.message);
+    console.error("Auth error in getAppContext:", error.message);
+    return null;
   }
 
   if (!user) {
