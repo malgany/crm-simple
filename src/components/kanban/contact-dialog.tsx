@@ -3,12 +3,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowRightLeft,
+  CircleAlert,
   LoaderCircle,
   Mail,
   MessageCircleMore,
   NotebookPen,
   Phone,
   Save,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,6 +42,7 @@ type ContactDialogProps = {
   initialFocus: "details" | "notes";
   onAssign: (dealId: string, assignedUserId: string | null) => Promise<boolean>;
   onAddNote: (dealId: string, values: NoteSchema) => Promise<boolean>;
+  onDeleteContact: (dealId: string) => Promise<boolean>;
   onMove: (dealId: string, stageId: string) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
   onUpdateContact: (
@@ -83,6 +86,7 @@ export function ContactDialog({
   initialFocus,
   onAssign,
   onAddNote,
+  onDeleteContact,
   onMove,
   onOpenChange,
   onUpdateContact,
@@ -90,6 +94,8 @@ export function ContactDialog({
   stages,
   viewerId,
 }: ContactDialogProps) {
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedStageId, setSelectedStageId] = useState(card?.stageId ?? "");
   const contactForm = useForm<UpdateContactSchema>({
     defaultValues: {
@@ -112,6 +118,8 @@ export function ContactDialog({
       return;
     }
 
+    setConfirmDeleteOpen(false);
+    setSelectedStageId(card.stageId);
     contactForm.reset({
       email: card.contact.email ?? "",
       name: card.contact.name,
@@ -130,6 +138,13 @@ export function ContactDialog({
 
     return () => cancelAnimationFrame(frame);
   }, [card, initialFocus, noteForm, open]);
+
+  useEffect(() => {
+    if (!open) {
+      setConfirmDeleteOpen(false);
+      setIsDeleting(false);
+    }
+  }, [open]);
 
   if (!card) {
     return null;
@@ -173,17 +188,32 @@ export function ContactDialog({
     );
   };
 
+  const handleDeleteContact = async () => {
+    setIsDeleting(true);
+
+    try {
+      const success = await onDeleteContact(card.id);
+
+      if (success) {
+        setConfirmDeleteOpen(false);
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="w-[min(94vw,60rem)]">
-        <DialogHeader>
-          <DialogTitle>{card.contact.name}</DialogTitle>
-          <DialogDescription>
-            Etapa atual: <strong>{currentStageName}</strong>
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="space-y-6">
+    <>
+      <Dialog onOpenChange={onOpenChange} open={open}>
+        <DialogContent className="w-[min(94vw,60rem)]">
+          <DialogHeader>
+            <DialogTitle>{card.contact.name}</DialogTitle>
+            <DialogDescription>
+              Etapa atual: <strong>{currentStageName}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+            <section className="space-y-6">
             <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50/70 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Acoes rapidas
@@ -238,9 +268,22 @@ export function ContactDialog({
                   <Input id="contact-origin" {...contactForm.register("origin")} />
                 </div>
               </div>
-              <div className="flex justify-end">
+              <div className="flex items-center justify-between gap-3">
                 <Button
-                  disabled={contactForm.formState.isSubmitting}
+                  disabled={
+                    contactForm.formState.isSubmitting ||
+                    noteForm.formState.isSubmitting ||
+                    isDeleting
+                  }
+                  onClick={() => setConfirmDeleteOpen(true)}
+                  type="button"
+                  variant="danger"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Excluir contato
+                </Button>
+                <Button
+                  disabled={contactForm.formState.isSubmitting || isDeleting}
                   type="submit"
                   variant="secondary"
                 >
@@ -275,7 +318,8 @@ export function ContactDialog({
                     !selectedStageId ||
                     selectedStageId === card.stageId ||
                     contactForm.formState.isSubmitting ||
-                    noteForm.formState.isSubmitting
+                    noteForm.formState.isSubmitting ||
+                    isDeleting
                   }
                   onClick={handleMove}
                   type="button"
@@ -306,7 +350,10 @@ export function ContactDialog({
                   <p className="text-sm text-[var(--danger)]">
                     {noteForm.formState.errors.body?.message}
                   </p>
-                  <Button disabled={noteForm.formState.isSubmitting} type="submit">
+                  <Button
+                    disabled={noteForm.formState.isSubmitting || isDeleting}
+                    type="submit"
+                  >
                     {noteForm.formState.isSubmitting ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />
                     ) : null}
@@ -335,9 +382,47 @@ export function ContactDialog({
                 </div>
               )}
             </div>
-          </section>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog onOpenChange={setConfirmDeleteOpen} open={confirmDeleteOpen}>
+        <DialogContent className="w-[min(94vw,28rem)]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <CircleAlert className="h-5 w-5 text-[var(--danger)]" />
+              Excluir contato
+            </DialogTitle>
+            <DialogDescription>
+              Gostaria mesmo de excluir <strong>{card.contact.name}</strong>? Esta
+              acao remove o card e as observacoes vinculadas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-3">
+            <Button
+              disabled={isDeleting}
+              onClick={() => setConfirmDeleteOpen(false)}
+              type="button"
+              variant="outline"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={isDeleting}
+              onClick={handleDeleteContact}
+              type="button"
+              variant="danger"
+            >
+              {isDeleting ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4" />
+              )}
+              Confirmar exclusao
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

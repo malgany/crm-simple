@@ -17,12 +17,9 @@ import {
 import type { KanbanCard } from "@/lib/app.types";
 
 type DealCardProps = {
-  canAssign: boolean;
   card: KanbanCard;
-  onAssignToggle: (dealId: string, assignedUserId: string | null) => void;
   onOpenDetails: (dealId: string) => void;
   stageId: string;
-  viewerId: string;
 };
 
 function QuickAction({
@@ -53,12 +50,9 @@ function QuickAction({
 }
 
 export function DealCard({
-  canAssign,
   card,
-  onAssignToggle,
   onOpenDetails,
   stageId,
-  viewerId,
 }: DealCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -124,21 +118,6 @@ export function DealCard({
           <QuickAction href={whatsappUrl} icon={MessageCircleMore} label="WhatsApp" />
           <QuickAction href={telUrl} icon={Phone} label="Telefone" />
           <QuickAction href={mailtoUrl} icon={Mail} label="E-mail" />
-          {canAssign ? (
-            <button
-              className="rounded-full border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
-              onClick={(event) => {
-                event.stopPropagation();
-                onAssignToggle(
-                  card.id,
-                  card.assignedUser?.auth_user_id === viewerId ? null : viewerId,
-                );
-              }}
-              type="button"
-            >
-              {card.assignedUser?.auth_user_id === viewerId ? "Liberar" : "Assinar"}
-            </button>
-          ) : null}
         </div>
         <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold text-slate-600">
           {card.notes.length} nota{card.notes.length === 1 ? "" : "s"}

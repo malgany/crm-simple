@@ -50,6 +50,17 @@ export const noteSchema = z.object({
     .max(1000, "Use no maximo 1000 caracteres."),
 });
 
+export const changePasswordSchema = z
+  .object({
+    confirmPassword: z.string().min(1, "Confirme a nova senha."),
+    currentPassword: z.string().min(1, "Informe a senha atual."),
+    password: passwordField,
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    message: "As senhas nao conferem.",
+    path: ["confirmPassword"],
+  });
+
 export const moveDealSchema = z.object({
   dealId: z.string().uuid("Deal invalido."),
   stageId: z.string().uuid("Etapa invalida."),
@@ -210,6 +221,7 @@ export const companyUpdateSchema = z.object({
 export type ContactSchema = z.infer<typeof contactSchema>;
 export type UpdateContactSchema = z.infer<typeof updateContactSchema>;
 export type NoteSchema = z.infer<typeof noteSchema>;
+export type ChangePasswordSchema = z.infer<typeof changePasswordSchema>;
 export type MoveDealSchema = z.infer<typeof moveDealSchema>;
 export type AssignDealSchema = z.infer<typeof assignDealSchema>;
 export type StageDraftSchema = z.infer<typeof stageDraftSchema>;

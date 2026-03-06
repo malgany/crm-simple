@@ -488,6 +488,19 @@ export async function updateContact(companyId: string, dealId: string, values: U
   };
 }
 
+export async function deleteContact(companyId: string, dealId: string) {
+  const admin = getAdminClient();
+  const deal = await loadCompanyDeal(companyId, dealId);
+  const contact = await loadCompanyContact(companyId, deal.contact_id);
+  const { error } = await admin
+    .from("contacts")
+    .delete()
+    .eq("id", contact.id)
+    .eq("company_id", companyId);
+
+  throwIfError(error);
+}
+
 export async function moveDeal(companyId: string, dealId: string, stageId: string) {
   const admin = getAdminClient();
   await loadCompanyStage(companyId, stageId);

@@ -5,6 +5,7 @@ import {
   filterStages,
   mergeStageStructure,
   moveCardLocally,
+  removeCard,
   updateCardAssignment,
 } from "./kanban";
 
@@ -85,6 +86,13 @@ describe("kanban helpers", () => {
     });
 
     expect(updated[0].cards[0]?.assignedUser?.name).toBe("Ana");
+  });
+
+  it("removes a card from the board by deal id", () => {
+    const updated = removeCard(baseStages, "deal-1");
+
+    expect(updated[0].cards).toHaveLength(0);
+    expect(updated[1].cards).toHaveLength(0);
   });
 
   it("merges new stage structure without losing cards", () => {

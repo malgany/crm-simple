@@ -2,6 +2,7 @@
 
 import { DndContext, DragOverlay, closestCorners, type DragEndEvent } from "@dnd-kit/core";
 import {
+  LockKeyhole,
   Plus,
   Search,
   Shield,
@@ -25,6 +26,7 @@ import {
   type StageDraft,
 } from "@/components/kanban/manage-stages-dialog";
 import { NewContactDialog } from "@/components/kanban/new-contact-dialog";
+import { ResetPasswordDialog } from "@/components/kanban/reset-password-dialog";
 import { StageColumn } from "@/components/kanban/stage-column";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +47,7 @@ import {
   mergeStageStructure,
   moveCardLocally,
   prependCard,
+  removeCard,
   updateCardAssignment,
   updateCardContact,
 } from "@/lib/kanban";
@@ -93,6 +96,7 @@ export function KanbanPage({
   const [dialogFocus, setDialogFocus] = useState<"details" | "notes">("details");
   const [newContactOpen, setNewContactOpen] = useState(false);
   const [manageStagesOpen, setManageStagesOpen] = useState(false);
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const deferredSearch = useDeferredValue(searchQuery);
   const filteredStages = filterStages(stages, deferredSearch);
   const filteredCardCount = useMemo(
@@ -107,6 +111,7 @@ export function KanbanPage({
   const selectedDealIdRef = useRef<string | null>(null);
   const newContactOpenRef = useRef(false);
   const manageStagesOpenRef = useRef(false);
+  const resetPasswordOpenRef = useRef(false);
   const mutationCountRef = useRef(0);
   const refreshInFlightRef = useRef(false);
   const pendingRefreshRef = useRef(false);
@@ -117,6 +122,7 @@ export function KanbanPage({
     selectedDealIdRef.current !== null ||
     newContactOpenRef.current ||
     manageStagesOpenRef.current ||
+    resetPasswordOpenRef.current ||
     mutationCountRef.current > 0;
 
   const openDeal = (dealId: string, focus: "details" | "notes" = "details") => {
@@ -206,11 +212,12 @@ export function KanbanPage({
     selectedDealIdRef.current = selectedDealId;
     newContactOpenRef.current = newContactOpen;
     manageStagesOpenRef.current = manageStagesOpen;
+    resetPasswordOpenRef.current = resetPasswordOpen;
 
     if (pendingRefreshRef.current && !isBoardLocked()) {
       void refreshBoardRef.current();
     }
-  }, [dragDealId, manageStagesOpen, newContactOpen, selectedDealId]);
+  }, [dragDealId, manageStagesOpen, newContactOpen, resetPasswordOpen, selectedDealId]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -378,6 +385,36 @@ export function KanbanPage({
     }
   };
 
+  const handleDeleteContact = async (dealId: string) => {
+    const previousStages = stages;
+    beginMutation();
+
+    try {
+      setStages((current) => removeCard(current, dealId));
+      setSelectedDealId(null);
+      setDialogFocus("details");
+
+      await requestApi(
+        `/api/board/deals/${dealId}/contact`,
+        {
+          method: "DELETE",
+        },
+        companyId,
+      );
+
+      pendingRefreshRef.current = true;
+      toast.success("Contato excluido.");
+      return true;
+    } catch (error) {
+      setStages(previousStages);
+      setSelectedDealId(dealId);
+      toast.error(getErrorMessage(error, "Nao foi possivel excluir o contato."));
+      return false;
+    } finally {
+      endMutation();
+    }
+  };
+
   const handleAssignDeal = async (dealId: string, assignedUserId: string | null) => {
     const previousStages = stages;
     const optimisticAssignedUser: CompanyUserSummary | null =
@@ -499,6 +536,13 @@ export function KanbanPage({
           onSelect: () => router.push(usersPath),
         }]
       : []),
+    ...(!viewer.isSuperadmin
+      ? [{
+          icon: LockKeyhole,
+          label: "Redefinir senha",
+          onSelect: () => setResetPasswordOpen(true),
+        }]
+      : []),
     ...(viewer.isSuperadmin
       ? [{
           icon: Shield,
@@ -563,14 +607,9 @@ export function KanbanPage({
         <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
           {filteredStages.map((stage) => (
             <StageColumn
-              canAssign={!viewer.isSuperadmin}
               key={stage.id}
-              onAssignToggle={(dealId, assignedUserId) => {
-                void handleAssignDeal(dealId, assignedUserId);
-              }}
               onOpenDetails={(dealId) => openDeal(dealId, "details")}
               stage={stage}
-              viewerId={viewer.id}
             />
           ))}
         </div>
@@ -600,6 +639,11 @@ export function KanbanPage({
         open={canManageStages && manageStagesOpen}
         stages={stages}
       />
+      <ResetPasswordDialog
+        onOpenChange={setResetPasswordOpen}
+        open={resetPasswordOpen}
+        userEmail={viewer.email}
+      />
       <ContactDialog
         canAssign={!viewer.isSuperadmin}
         card={selectedCard}
@@ -607,6 +651,7 @@ export function KanbanPage({
         key={selectedCard?.id ?? "contact-dialog"}
         onAssign={handleAssignDeal}
         onAddNote={handleAddNote}
+        onDeleteContact={handleDeleteContact}
         onMove={(dealId, stageId) => handleMoveDeal({ dealId, stageId })}
         onOpenChange={closeDialog}
         onUpdateContact={handleUpdateContact}

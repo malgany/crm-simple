@@ -151,6 +151,13 @@ export function updateCardAssignment(
   }));
 }
 
+export function removeCard(stages: Stage[], dealId: string) {
+  return stages.map((stage) => ({
+    ...stage,
+    cards: stage.cards.filter((card) => card.id !== dealId),
+  }));
+}
+
 export function mergeStageStructure(
   previousStages: Stage[],
   nextStages: Array<Pick<Stage, "id" | "name" | "position">>,

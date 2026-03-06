@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireApiContext } from "@/lib/auth";
 import { getCompanyIdFromUrl, jsonError, parseJsonBody } from "@/lib/api-helpers";
-import { updateContact } from "@/lib/crm";
+import { deleteContact, updateContact } from "@/lib/crm";
 import { updateContactSchema } from "@/lib/validation";
 
 type RouteContext = {
@@ -26,5 +26,23 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     });
   } catch (error) {
     return jsonError(error, "Nao foi possivel atualizar o contato.");
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteContext) {
+  try {
+    const context = await requireApiContext({
+      companyId: getCompanyIdFromUrl(request),
+      requireCompany: true,
+    });
+    const routeParams = await params;
+
+    await deleteContact(context.company!.id, routeParams.dealId);
+
+    return NextResponse.json({
+      ok: true,
+    });
+  } catch (error) {
+    return jsonError(error, "Nao foi possivel excluir o contato.");
   }
 }
