@@ -22,7 +22,7 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createBrowserSupabaseClient();
-  const nextPath = searchParams.get("next") || "/negociacoes";
+  const nextPath = searchParams.get("next") || "/";
   const form = useForm<LoginValues>({
     defaultValues: {
       email: "",

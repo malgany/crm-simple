@@ -51,7 +51,7 @@ export function SetPasswordForm({ mode }: SetPasswordFormProps) {
     toast.success(
       mode === "invite" ? "Senha criada com sucesso." : "Senha atualizada com sucesso.",
     );
-    router.replace("/negociacoes");
+    router.replace("/");
     router.refresh();
   });
 

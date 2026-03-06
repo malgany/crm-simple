@@ -1,23 +1,20 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
-import { SignupForm } from "@/components/auth/signup-form";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getHomeDestination, getAppContext } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
 
 export default async function SignupPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const context = await getAppContext();
 
-  if (user) {
-    redirect("/negociacoes");
+  if (context) {
+    redirect(await getHomeDestination());
   }
 
   return (
     <AuthCard
-      description="Crie seu acesso e confirme o e-mail para entrar no CRM."
-      eyebrow="Cadastro"
+      description="O cadastro publico foi desativado. Novos acessos sao criados pelo superadmin ou pelo admin da empresa."
+      eyebrow="Acesso"
       footer={
         <p>
           Ja tem acesso?{" "}
@@ -26,9 +23,11 @@ export default async function SignupPage() {
           </Link>
         </p>
       }
-      title="Criar conta"
+      title="Cadastro desativado"
     >
-      <SignupForm />
+      <Button asChild className="w-full" size="lg">
+        <Link href="/login">Voltar ao login</Link>
+      </Button>
     </AuthCard>
   );
 }

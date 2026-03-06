@@ -138,6 +138,19 @@ export function appendNoteToCard(
   }));
 }
 
+export function updateCardAssignment(
+  stages: Stage[],
+  dealId: string,
+  assignedUser: KanbanCard["assignedUser"],
+) {
+  return stages.map((stage) => ({
+    ...stage,
+    cards: stage.cards.map((card) =>
+      card.id === dealId ? { ...card, assignedUser } : card,
+    ),
+  }));
+}
+
 export function mergeStageStructure(
   previousStages: Stage[],
   nextStages: Array<Pick<Stage, "id" | "name" | "position">>,

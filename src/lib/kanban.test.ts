@@ -5,12 +5,14 @@ import {
   filterStages,
   mergeStageStructure,
   moveCardLocally,
+  updateCardAssignment,
 } from "./kanban";
 
 const baseStages: Stage[] = [
   {
     cards: [
       {
+        assignedUser: null,
         contact: {
           created_at: "2026-03-05T12:00:00.000Z",
           email: "ana@empresa.com",
@@ -62,6 +64,8 @@ describe("kanban helpers", () => {
 
   it("appends notes with newest first", () => {
     const updated = appendNoteToCard(baseStages, "deal-1", {
+      authorId: "user-1",
+      authorName: "Ana",
       body: "Retornar amanha cedo",
       createdAt: "2026-03-05T15:00:00.000Z",
       dealId: "deal-1",
@@ -69,6 +73,18 @@ describe("kanban helpers", () => {
     });
 
     expect(updated[0].cards[0]?.notes[0]?.id).toBe("note-1");
+  });
+
+  it("updates card assignment without changing stage structure", () => {
+    const updated = updateCardAssignment(baseStages, "deal-1", {
+      auth_user_id: "user-1",
+      email: "ana@empresa.com",
+      name: "Ana",
+      role: "member",
+      status: "active",
+    });
+
+    expect(updated[0].cards[0]?.assignedUser?.name).toBe("Ana");
   });
 
   it("merges new stage structure without losing cards", () => {

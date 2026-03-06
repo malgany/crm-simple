@@ -35,8 +35,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 type ContactDialogProps = {
+  canAssign: boolean;
   card: KanbanCard | null;
   initialFocus: "details" | "notes";
+  onAssign: (dealId: string, assignedUserId: string | null) => Promise<boolean>;
   onAddNote: (dealId: string, values: NoteSchema) => Promise<boolean>;
   onMove: (dealId: string, stageId: string) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
@@ -46,6 +48,7 @@ type ContactDialogProps = {
   ) => Promise<boolean>;
   open: boolean;
   stages: Stage[];
+  viewerId: string;
 };
 
 function ContactShortcut({
@@ -75,14 +78,17 @@ function ContactShortcut({
 }
 
 export function ContactDialog({
+  canAssign,
   card,
   initialFocus,
+  onAssign,
   onAddNote,
   onMove,
   onOpenChange,
   onUpdateContact,
   open,
   stages,
+  viewerId,
 }: ContactDialogProps) {
   const [selectedStageId, setSelectedStageId] = useState(card?.stageId ?? "");
   const contactForm = useForm<UpdateContactSchema>({
@@ -160,6 +166,13 @@ export function ContactDialog({
     }
   };
 
+  const handleAssignToggle = async () => {
+    await onAssign(
+      card.id,
+      card.assignedUser?.auth_user_id === viewerId ? null : viewerId,
+    );
+  };
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="w-[min(94vw,60rem)]">
@@ -183,7 +196,19 @@ export function ContactDialog({
                 />
                 <ContactShortcut href={telUrl} icon={Phone} label="Ligar" />
                 <ContactShortcut href={mailtoUrl} icon={Mail} label="E-mail" />
+                {canAssign ? (
+                  <Button onClick={handleAssignToggle} type="button" variant="outline">
+                    {card.assignedUser?.auth_user_id === viewerId
+                      ? "Liberar assinatura"
+                      : "Assinar para mim"}
+                  </Button>
+                ) : null}
               </div>
+              <p className="mt-3 text-sm text-slate-600">
+                {card.assignedUser
+                  ? `Acompanhado por ${card.assignedUser.name}.`
+                  : "Nenhum usuario assinou este card ainda."}
+              </p>
             </div>
             <form className="space-y-5" onSubmit={handleUpdateContact}>
               <div className="space-y-2">
@@ -299,7 +324,7 @@ export function ContactDialog({
                   >
                     <p className="text-sm leading-6 text-slate-700">{note.body}</p>
                     <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                      {formatDateTime(note.createdAt)}
+                      {note.authorName} • {formatDateTime(note.createdAt)}
                     </p>
                   </article>
                 ))

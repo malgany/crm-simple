@@ -7,15 +7,21 @@ import { cn } from "@/lib/utils";
 import { DealCard } from "@/components/kanban/deal-card";
 
 type StageColumnProps = {
+  canAssign: boolean;
+  onAssignToggle: (dealId: string, assignedUserId: string | null) => void;
   stage: Stage;
   onOpenDetails: (dealId: string) => void;
   onOpenNotes: (dealId: string) => void;
+  viewerId: string;
 };
 
 export function StageColumn({
+  canAssign,
+  onAssignToggle,
   stage,
   onOpenDetails,
   onOpenNotes,
+  viewerId,
 }: StageColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
     data: {
@@ -49,11 +55,14 @@ export function StageColumn({
         {stage.cards.length ? (
           stage.cards.map((card) => (
             <DealCard
+              canAssign={canAssign}
               card={card}
               key={card.id}
+              onAssignToggle={onAssignToggle}
               onOpenDetails={onOpenDetails}
               onOpenNotes={onOpenNotes}
               stageId={stage.id}
+              viewerId={viewerId}
             />
           ))
         ) : (

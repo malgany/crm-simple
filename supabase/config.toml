@@ -228,15 +228,15 @@ otp_expiry = 3600
 
 [auth.email.template.confirmation]
 subject = "Confirme seu cadastro"
-content_path = "./templates/confirmation.html"
+content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.invite]
 subject = "Voce foi convidado"
-content_path = "./templates/invite.html"
+content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]
 subject = "Defina sua nova senha"
-content_path = "./templates/recovery.html"
+content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template
 # [auth.email.notification.password_changed]

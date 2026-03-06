@@ -32,13 +32,22 @@ export function getSupabaseServiceEnv() {
   };
 }
 
+export function getAppEnv() {
+  return {
+    superadminEmail: assertEnv(
+      "CRM_SUPERADMIN_EMAIL",
+      process.env.CRM_SUPERADMIN_EMAIL,
+    ).trim().toLowerCase(),
+  };
+}
+
 export function getSiteLeadIntegrationEnv() {
   return {
-    token: assertEnv("CRM_SITE_LEADS_TOKEN", process.env.CRM_SITE_LEADS_TOKEN),
-    ownerUserId: assertEnv(
-      "CRM_SITE_LEADS_OWNER_USER_ID",
-      process.env.CRM_SITE_LEADS_OWNER_USER_ID,
+    companyId: assertEnv(
+      "CRM_SITE_LEADS_COMPANY_ID",
+      process.env.CRM_SITE_LEADS_COMPANY_ID,
     ),
     stageId: getOptionalEnv(process.env.CRM_SITE_LEADS_STAGE_ID),
+    token: assertEnv("CRM_SITE_LEADS_TOKEN", process.env.CRM_SITE_LEADS_TOKEN),
   };
 }

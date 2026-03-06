@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 import { getSupabaseEnv } from "@/lib/env";
 
-const protectedPrefixes = ["/negociacoes"];
+const protectedPrefixes = ["/admin", "/negociacoes", "/usuarios", "/acesso-bloqueado"];
 const authRedirectPaths = new Set(["/login", "/cadastro"]);
 
 function isProtectedPath(pathname: string) {
@@ -47,7 +47,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && authRedirectPaths.has(pathname)) {
     const appUrl = request.nextUrl.clone();
-    appUrl.pathname = "/negociacoes";
+    appUrl.pathname = "/";
     appUrl.search = "";
     return NextResponse.redirect(appUrl);
   }

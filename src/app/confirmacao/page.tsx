@@ -34,15 +34,15 @@ export default async function ConfirmationPage({
       actionHref: "/login",
       actionLabel: "Voltar ao login",
       description:
-        "Enviamos um link de confirmacao para o seu e-mail. Abra a mensagem e finalize o cadastro pelo botao recebido.",
-      eyebrow: "Cadastro",
+        "Enviamos um link de confirmacao para o seu e-mail. Abra a mensagem e finalize a ativacao pelo botao recebido.",
+      eyebrow: "Acesso",
       icon: <MailCheck className="h-6 w-6 text-[var(--primary)]" />,
       iconClassName:
         "border-[var(--border)] bg-[rgba(20,94,99,0.08)] text-[var(--primary)]",
       title: "Confira seu e-mail",
     },
     success: {
-      actionHref: "/negociacoes",
+      actionHref: "/",
       actionLabel: "Entrar no CRM",
       description:
         "Seu e-mail foi confirmado e a sessao ja foi validada. Agora voce pode continuar para o CRM.",
@@ -56,7 +56,7 @@ export default async function ConfirmationPage({
       actionHref: "/login",
       actionLabel: "Ir para o login",
       description:
-        "O link de confirmacao esta invalido ou expirou. Solicite um novo convite ou refaca o cadastro para receber outro e-mail.",
+        "O link de confirmacao esta invalido ou expirou. Solicite um novo convite ou entre em contato com o administrador.",
       eyebrow: "Confirmacao",
       icon: <TriangleAlert className="h-6 w-6 text-[var(--danger)]" />,
       iconClassName:
@@ -72,9 +72,9 @@ export default async function ConfirmationPage({
       footer={
         mode === "error" ? (
           <p>
-            Precisa tentar de novo?{" "}
-            <Link className="font-semibold text-[var(--primary)]" href="/cadastro">
-              Criar conta novamente
+            Precisa de um novo acesso?{" "}
+            <Link className="font-semibold text-[var(--primary)]" href="/login">
+              Voltar ao login
             </Link>
           </p>
         ) : null

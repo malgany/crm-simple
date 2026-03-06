@@ -9,36 +9,96 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      companies: {
+        Row: {
+          created_at: string;
+          id: string;
+          name: string;
+          status: Database["public"]["Enums"]["company_status"];
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          name: string;
+          status?: Database["public"]["Enums"]["company_status"];
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          name?: string;
+          status?: Database["public"]["Enums"]["company_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      company_users: {
+        Row: {
+          auth_user_id: string;
+          company_id: string;
+          created_at: string;
+          email: string;
+          id: string;
+          name: string;
+          role: Database["public"]["Enums"]["company_user_role"];
+          status: Database["public"]["Enums"]["company_user_status"];
+          updated_at: string;
+        };
+        Insert: {
+          auth_user_id: string;
+          company_id: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          name: string;
+          role: Database["public"]["Enums"]["company_user_role"];
+          status?: Database["public"]["Enums"]["company_user_status"];
+          updated_at?: string;
+        };
+        Update: {
+          auth_user_id?: string;
+          company_id?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          name?: string;
+          role?: Database["public"]["Enums"]["company_user_role"];
+          status?: Database["public"]["Enums"]["company_user_status"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       contacts: {
         Row: {
+          company_id: string;
           created_at: string;
           email: string | null;
           id: string;
           name: string;
           origin: string | null;
-          owner_user_id: string;
           phone: string;
           phone_normalized: string;
           updated_at: string;
         };
         Insert: {
+          company_id: string;
           created_at?: string;
           email?: string | null;
           id?: string;
           name: string;
           origin?: string | null;
-          owner_user_id?: string;
           phone: string;
           phone_normalized: string;
           updated_at?: string;
         };
         Update: {
+          company_id?: string;
           created_at?: string;
           email?: string | null;
           id?: string;
           name?: string;
           origin?: string | null;
-          owner_user_id?: string;
           phone?: string;
           phone_normalized?: string;
           updated_at?: string;
@@ -47,77 +107,83 @@ export interface Database {
       };
       deals: {
         Row: {
+          assigned_user_id: string | null;
+          company_id: string;
           contact_id: string;
           created_at: string;
           id: string;
           moved_at: string;
-          owner_user_id: string;
           stage_id: string;
         };
         Insert: {
+          assigned_user_id?: string | null;
+          company_id: string;
           contact_id: string;
           created_at?: string;
           id?: string;
           moved_at?: string;
-          owner_user_id?: string;
           stage_id: string;
         };
         Update: {
+          assigned_user_id?: string | null;
+          company_id?: string;
           contact_id?: string;
           created_at?: string;
           id?: string;
           moved_at?: string;
-          owner_user_id?: string;
           stage_id?: string;
         };
         Relationships: [];
       };
       notes: {
         Row: {
+          author_name: string;
+          author_user_id: string | null;
           body: string;
           created_at: string;
           deal_id: string;
           id: string;
-          owner_user_id: string;
         };
         Insert: {
+          author_name?: string;
+          author_user_id?: string | null;
           body: string;
           created_at?: string;
           deal_id: string;
           id?: string;
-          owner_user_id?: string;
         };
         Update: {
+          author_name?: string;
+          author_user_id?: string | null;
           body?: string;
           created_at?: string;
           deal_id?: string;
           id?: string;
-          owner_user_id?: string;
         };
         Relationships: [];
       };
       stages: {
         Row: {
+          company_id: string;
           created_at: string;
           id: string;
           name: string;
-          owner_user_id: string;
           position: number;
           updated_at: string;
         };
         Insert: {
+          company_id: string;
           created_at?: string;
           id?: string;
           name: string;
-          owner_user_id?: string;
           position?: number;
           updated_at?: string;
         };
         Update: {
+          company_id?: string;
           created_at?: string;
           id?: string;
           name?: string;
-          owner_user_id?: string;
           position?: number;
           updated_at?: string;
         };
@@ -126,22 +192,34 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: {
-      create_contact_with_deal: {
+      current_company_id: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      is_company_admin: {
         Args: {
-          p_email?: string | null;
-          p_name: string;
-          p_origin?: string | null;
-          p_phone: string;
-          p_phone_normalized: string;
-          p_stage_id: string;
+          p_company_id: string;
         };
-        Returns: {
-          contact_id: string;
-          deal_id: string;
-        }[];
+        Returns: boolean;
+      };
+      is_company_member: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: boolean;
+      };
+      seed_company_stages: {
+        Args: {
+          p_company_id: string;
+        };
+        Returns: undefined;
       };
     };
-    Enums: Record<string, never>;
+    Enums: {
+      company_status: "active" | "inactive";
+      company_user_role: "admin" | "member";
+      company_user_status: "active" | "inactive" | "deleted";
+    };
     CompositeTypes: Record<string, never>;
   };
 }

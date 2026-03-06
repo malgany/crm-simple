@@ -7,7 +7,9 @@ import {
   MoreHorizontal,
   Plus,
   Search,
+  Shield,
   Settings2,
+  Users,
 } from "lucide-react";
 import {
   useDeferredValue,
@@ -29,12 +31,15 @@ import { StageColumn } from "@/components/kanban/stage-column";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type {
+  CompanyUserSummary,
   ContactRecord,
   KanbanCard,
+  NoteItem,
   MoveDealInput,
   Stage,
+  ViewerSession,
 } from "@/lib/app.types";
-import { loadBoardData } from "@/lib/board-data";
+import { requestApi } from "@/lib/client-api";
 import {
   appendNoteToCard,
   buildBoardState,
@@ -42,21 +47,21 @@ import {
   mergeStageStructure,
   moveCardLocally,
   prependCard,
+  updateCardAssignment,
   updateCardContact,
 } from "@/lib/kanban";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import type { ContactSchema, NoteSchema, UpdateContactSchema } from "@/lib/validation";
-import {
-  getErrorMessage,
-  normalizeOptionalText,
-  normalizePhone,
-} from "@/lib/utils";
+import { getErrorMessage, normalizeOptionalText, normalizePhone } from "@/lib/utils";
 
 const AUTO_REFRESH_MS = 15000;
 
 type KanbanPageProps = {
+  canManageStages: boolean;
+  canManageUsers: boolean;
+  companyId: string;
   initialStages: Stage[];
-  userEmail: string;
+  viewer: ViewerSession;
 };
 
 function findCard(stages: Stage[], dealId: string | null) {
@@ -75,11 +80,13 @@ function findCard(stages: Stage[], dealId: string | null) {
   return null;
 }
 
-function getDuplicateMessage(name: string) {
-  return `Ja existe um contato com este telefone: ${name}.`;
-}
-
-export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
+export function KanbanPage({
+  canManageStages,
+  canManageUsers,
+  companyId,
+  initialStages,
+  viewer,
+}: KanbanPageProps) {
   const router = useRouter();
   const supabase = createBrowserSupabaseClient();
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
@@ -158,7 +165,15 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     pendingRefreshRef.current = false;
 
     try {
-      const board = await loadBoardData(supabase);
+      const response = await requestApi<{ board: { stages: Stage[] } }>(
+        "/api/board",
+        {
+          cache: "no-store",
+          method: "GET",
+        },
+        companyId,
+      );
+      const board = response.board;
       const nextStages = buildBoardState(board.stages);
 
       if (!mountedRef.current) {
@@ -253,30 +268,7 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleVisibilityChange);
     };
-  }, [supabase]);
-
-  const lookupDuplicateByPhone = async (
-    phoneNormalized: string,
-    currentContactId?: string,
-  ) => {
-    let query = supabase
-      .from("contacts")
-      .select("id, name")
-      .eq("phone_normalized", phoneNormalized)
-      .limit(1);
-
-    if (currentContactId) {
-      query = query.neq("id", currentContactId);
-    }
-
-    const { data, error } = await query.maybeSingle();
-
-    if (error) {
-      throw error;
-    }
-
-    return data;
-  };
+  }, [companyId]);
 
   const handleMoveDeal = async ({ dealId, stageId }: MoveDealInput) => {
     const currentCard = findCard(stages, dealId);
@@ -285,30 +277,37 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       return true;
     }
 
+    const previousStages = stages;
     beginMutation();
 
     try {
       const movedAt = new Date().toISOString();
-      const previousStages = stages;
       setStages((current) => moveCardLocally(current, dealId, stageId, movedAt));
 
-      const { error } = await supabase
-        .from("deals")
-        .update({
-          moved_at: movedAt,
-          stage_id: stageId,
-        })
-        .eq("id", dealId);
-
-      if (error) {
-        setStages(previousStages);
-        toast.error(getErrorMessage(error, "Nao foi possivel mover o card."));
-        return false;
-      }
+      const response = await requestApi<{ moved: { movedAt: string; stageId: string } }>(
+        `/api/board/deals/${dealId}/move`,
+        {
+          body: JSON.stringify({ stageId }),
+          method: "PATCH",
+        },
+        companyId,
+      );
+      setStages((current) =>
+        moveCardLocally(
+          current,
+          dealId,
+          response.moved.stageId,
+          response.moved.movedAt,
+        ),
+      );
 
       pendingRefreshRef.current = true;
       toast.success("Card movido.");
       return true;
+    } catch (error) {
+      setStages(previousStages);
+      toast.error(getErrorMessage(error, "Nao foi possivel mover o card."));
+      return false;
     } finally {
       endMutation();
     }
@@ -318,64 +317,15 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     beginMutation();
 
     try {
-      const phoneNormalized = normalizePhone(values.phone);
-      const duplicate = await lookupDuplicateByPhone(phoneNormalized);
-
-      if (duplicate) {
-        toast.error(getDuplicateMessage(duplicate.name));
-        return false;
-      }
-
-      const { data, error } = await supabase.rpc("create_contact_with_deal", {
-        p_email: normalizeOptionalText(values.email),
-        p_name: values.name.trim(),
-        p_origin: normalizeOptionalText(values.origin),
-        p_phone: values.phone.trim(),
-        p_phone_normalized: phoneNormalized,
-        p_stage_id: values.stageId,
-      });
-
-      if (error) {
-        if (error.code === "23505") {
-          const existingContact = await lookupDuplicateByPhone(phoneNormalized);
-
-          if (existingContact) {
-            toast.error(getDuplicateMessage(existingContact.name));
-            return false;
-          }
-        }
-
-        toast.error(getErrorMessage(error, "Nao foi possivel criar o contato."));
-        return false;
-      }
-
-      const created = data?.[0];
-
-      if (!created) {
-        toast.error("O contato foi criado sem retorno valido do banco.");
-        return false;
-      }
-
-      const now = new Date().toISOString();
-      const newCard: KanbanCard = {
-        contact: {
-          created_at: now,
-          email: normalizeOptionalText(values.email),
-          id: created.contact_id,
-          name: values.name.trim(),
-          origin: normalizeOptionalText(values.origin),
-          phone: values.phone.trim(),
-          phone_normalized: phoneNormalized,
-          updated_at: now,
+      const response = await requestApi<{ card: KanbanCard }>(
+        "/api/board/contacts",
+        {
+          body: JSON.stringify(values),
+          method: "POST",
         },
-        createdAt: now,
-        id: created.deal_id,
-        movedAt: now,
-        notes: [],
-        stageId: values.stageId,
-      };
-
-      setStages((current) => prependCard(current, values.stageId, newCard));
+        companyId,
+      );
+      setStages((current) => prependCard(current, values.stageId, response.card));
       pendingRefreshRef.current = true;
       toast.success("Contato criado.");
       return true;
@@ -397,54 +347,36 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       return false;
     }
 
+    const previousStages = stages;
     beginMutation();
 
     try {
-      const phoneNormalized = normalizePhone(values.phone);
-      const duplicate = await lookupDuplicateByPhone(
-        phoneNormalized,
-        currentCard.contact.id,
-      );
-
-      if (duplicate) {
-        toast.error(getDuplicateMessage(duplicate.name));
-        return false;
-      }
-
       const nextContact: ContactRecord = {
         ...currentCard.contact,
         email: normalizeOptionalText(values.email),
         name: values.name.trim(),
         origin: normalizeOptionalText(values.origin),
         phone: values.phone.trim(),
-        phone_normalized: phoneNormalized,
+        phone_normalized: normalizePhone(values.phone),
         updated_at: new Date().toISOString(),
       };
-      const previousStages = stages;
       setStages((current) => updateCardContact(current, dealId, nextContact));
 
-      const { error } = await supabase
-        .from("contacts")
-        .update({
-          email: nextContact.email,
-          name: nextContact.name,
-          origin: nextContact.origin,
-          phone: nextContact.phone,
-          phone_normalized: nextContact.phone_normalized,
-          updated_at: nextContact.updated_at,
-        })
-        .eq("id", currentCard.contact.id);
-
-      if (error) {
-        setStages(previousStages);
-        toast.error(getErrorMessage(error, "Nao foi possivel atualizar o contato."));
-        return false;
-      }
+      const response = await requestApi<{ contact: ContactRecord }>(
+        `/api/board/deals/${dealId}/contact`,
+        {
+          body: JSON.stringify(values),
+          method: "PATCH",
+        },
+        companyId,
+      );
+      setStages((current) => updateCardContact(current, dealId, response.contact));
 
       pendingRefreshRef.current = true;
       toast.success("Contato atualizado.");
       return true;
     } catch (error) {
+      setStages(previousStages);
       toast.error(getErrorMessage(error, "Nao foi possivel atualizar o contato."));
       return false;
     } finally {
@@ -456,31 +388,70 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     beginMutation();
 
     try {
-      const { data, error } = await supabase
-        .from("notes")
-        .insert({
-          body: values.body.trim(),
-          deal_id: dealId,
-        })
-        .select("*")
-        .single();
-
-      if (error || !data) {
-        toast.error(getErrorMessage(error, "Nao foi possivel registrar a observacao."));
-        return false;
-      }
+      const response = await requestApi<{ note: NoteItem }>(
+        `/api/board/deals/${dealId}/notes`,
+        {
+          body: JSON.stringify(values),
+          method: "POST",
+        },
+        companyId,
+      );
 
       setStages((current) =>
-        appendNoteToCard(current, dealId, {
-          body: data.body,
-          createdAt: data.created_at,
-          dealId: data.deal_id,
-          id: data.id,
-        }),
+        appendNoteToCard(current, dealId, response.note),
       );
       pendingRefreshRef.current = true;
       toast.success("Observacao registrada.");
       return true;
+    } catch (error) {
+      toast.error(getErrorMessage(error, "Nao foi possivel registrar a observacao."));
+      return false;
+    } finally {
+      endMutation();
+    }
+  };
+
+  const handleAssignDeal = async (dealId: string, assignedUserId: string | null) => {
+    const previousStages = stages;
+    const optimisticAssignedUser: CompanyUserSummary | null =
+      assignedUserId === viewer.id
+        ? {
+            auth_user_id: viewer.id,
+            email: viewer.email,
+            name: viewer.name,
+            role: viewer.role === "admin" ? "admin" : "member",
+            status: "active",
+          }
+        : null;
+
+    beginMutation();
+
+    try {
+      setStages((current) =>
+        updateCardAssignment(current, dealId, optimisticAssignedUser),
+      );
+
+      const response = await requestApi<{ assignedUser: CompanyUserSummary | null }>(
+        `/api/board/deals/${dealId}/assign`,
+        {
+          body: JSON.stringify({ assignedUserId }),
+          method: "PATCH",
+        },
+        companyId,
+      );
+
+      setStages((current) =>
+        updateCardAssignment(current, dealId, response.assignedUser),
+      );
+      pendingRefreshRef.current = true;
+      toast.success(
+        response.assignedUser ? "Card assinado." : "Assinatura liberada.",
+      );
+      return true;
+    } catch (error) {
+      setStages(previousStages);
+      toast.error(getErrorMessage(error, "Nao foi possivel atualizar a assinatura."));
+      return false;
     } finally {
       endMutation();
     }
@@ -490,68 +461,18 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     beginMutation();
 
     try {
-      const currentStageIds = new Set(stages.map((stage) => stage.id));
-      const nextExistingIds = new Set(
-        drafts.filter((draft) => !draft.isNew).map((draft) => draft.id),
-      );
-      const deletedStageIds = stages
-        .filter((stage) => !nextExistingIds.has(stage.id))
-        .map((stage) => stage.id);
-
-      for (const stageId of deletedStageIds) {
-        const { error } = await supabase.from("stages").delete().eq("id", stageId);
-
-        if (error) {
-          toast.error(getErrorMessage(error, "Nao foi possivel remover a etapa."));
-          return false;
-        }
-      }
-
-      const updates = drafts.filter((draft) => currentStageIds.has(draft.id));
-      const insertDrafts = drafts.filter((draft) => draft.isNew);
-
-      const updateResults = await Promise.all(
-        updates.map((draft) =>
-          supabase
-            .from("stages")
-            .update({
-              name: draft.name.trim(),
-              position: draft.position,
-            })
-            .eq("id", draft.id),
-        ),
+      const response = await requestApi<{
+        stages: Array<Pick<Stage, "id" | "name" | "position">>;
+      }>(
+        "/api/board/stages",
+        {
+          body: JSON.stringify({ drafts }),
+          method: "PUT",
+        },
+        companyId,
       );
 
-      const updateError = updateResults.find((result) => result.error)?.error;
-
-      if (updateError) {
-        toast.error(getErrorMessage(updateError, "Nao foi possivel salvar as etapas."));
-        return false;
-      }
-
-      for (const draft of insertDrafts) {
-        const { error } = await supabase.from("stages").insert({
-          name: draft.name.trim(),
-          position: draft.position,
-        });
-
-        if (error) {
-          toast.error(getErrorMessage(error, "Nao foi possivel criar uma nova etapa."));
-          return false;
-        }
-      }
-
-      const { data, error } = await supabase
-        .from("stages")
-        .select("id, name, position")
-        .order("position");
-
-      if (error || !data) {
-        toast.error(getErrorMessage(error, "Nao foi possivel recarregar as etapas."));
-        return false;
-      }
-
-      setStages((current) => mergeStageStructure(current, data));
+      setStages((current) => mergeStageStructure(current, response.stages));
       pendingRefreshRef.current = true;
       toast.success("Etapas atualizadas.");
       return true;
@@ -603,12 +524,21 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
     await handleMoveDeal({ dealId, stageId: targetStageId });
   };
 
+  const usersPath = viewer.isSuperadmin
+    ? `/usuarios?companyId=${companyId}`
+    : "/usuarios";
+
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
       <header className="surface-shadow flex items-center justify-between gap-4 rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
-        <p className="text-lg font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
-          CRM
-        </p>
+        <div>
+          <p className="text-lg font-semibold uppercase tracking-[0.28em] text-[var(--primary)]">
+            CRM
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            {viewer.companyName} • {viewer.isSuperadmin ? "Superadmin em contexto" : viewer.role}
+          </p>
+        </div>
         <div className="relative" ref={menuRef}>
           <Button
             aria-expanded={menuOpen}
@@ -628,23 +558,53 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
                   Conta
                 </p>
                 <p className="mt-2 truncate text-sm font-semibold text-slate-950">
-                  {userEmail}
+                  {viewer.email}
                 </p>
-                <p className="text-sm text-slate-600">sessao autenticada</p>
+                <p className="text-sm text-slate-600">{viewer.name}</p>
               </div>
               <div className="mt-3 flex flex-col gap-2">
-                <Button
-                  className="w-full justify-start rounded-[1rem]"
-                  onClick={() => {
-                    setManageStagesOpen(true);
-                    setMenuOpen(false);
-                  }}
-                  type="button"
-                  variant="ghost"
-                >
-                  <Settings2 className="h-4 w-4" />
-                  Configurar etapas
-                </Button>
+                {canManageStages ? (
+                  <Button
+                    className="w-full justify-start rounded-[1rem]"
+                    onClick={() => {
+                      setManageStagesOpen(true);
+                      setMenuOpen(false);
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Configurar etapas
+                  </Button>
+                ) : null}
+                {canManageUsers ? (
+                  <Button
+                    className="w-full justify-start rounded-[1rem]"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      router.push(usersPath);
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Users className="h-4 w-4" />
+                    Usuarios
+                  </Button>
+                ) : null}
+                {viewer.isSuperadmin ? (
+                  <Button
+                    className="w-full justify-start rounded-[1rem]"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      router.push("/admin/empresas");
+                    }}
+                    type="button"
+                    variant="ghost"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Voltar para empresas
+                  </Button>
+                ) : null}
                 <Button
                   className="w-full justify-start rounded-[1rem]"
                   disabled={isSigningOut}
@@ -708,10 +668,15 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
         <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
           {filteredStages.map((stage) => (
             <StageColumn
+              canAssign={!viewer.isSuperadmin}
               key={stage.id}
+              onAssignToggle={(dealId, assignedUserId) => {
+                void handleAssignDeal(dealId, assignedUserId);
+              }}
               onOpenDetails={(dealId) => openDeal(dealId, "details")}
               onOpenNotes={(dealId) => openDeal(dealId, "notes")}
               stage={stage}
+              viewerId={viewer.id}
             />
           ))}
         </div>
@@ -738,19 +703,22 @@ export function KanbanPage({ initialStages, userEmail }: KanbanPageProps) {
       <ManageStagesDialog
         onOpenChange={setManageStagesOpen}
         onSave={handleSaveStages}
-        open={manageStagesOpen}
+        open={canManageStages && manageStagesOpen}
         stages={stages}
       />
       <ContactDialog
+        canAssign={!viewer.isSuperadmin}
         card={selectedCard}
         initialFocus={dialogFocus}
         key={selectedCard?.id ?? "contact-dialog"}
+        onAssign={handleAssignDeal}
         onAddNote={handleAddNote}
         onMove={(dealId, stageId) => handleMoveDeal({ dealId, stageId })}
         onOpenChange={closeDialog}
         onUpdateContact={handleUpdateContact}
         open={!!selectedCard}
         stages={stages}
+        viewerId={viewer.id}
       />
     </main>
   );

@@ -2,27 +2,24 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthCard } from "@/components/auth/auth-card";
 import { LoginForm } from "@/components/auth/login-form";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getHomeDestination, getAppContext } from "@/lib/auth";
 
 export default async function LoginPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const context = await getAppContext();
 
-  if (user) {
-    redirect("/negociacoes");
+  if (context) {
+    redirect(await getHomeDestination());
   }
 
   return (
     <AuthCard
-      description="Entre com seu e-mail e senha para acessar o quadro de negociacoes."
+      description="Entre com seu e-mail e senha para acessar sua empresa ou a area global."
       eyebrow="Acesso"
       footer={
         <p>
-          Ainda nao tem conta?{" "}
+          Precisa de acesso?{" "}
           <Link className="font-semibold text-[var(--primary)]" href="/cadastro">
-            Criar acesso
+            Solicite ao administrador
           </Link>
         </p>
       }

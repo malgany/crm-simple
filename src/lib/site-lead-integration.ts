@@ -48,7 +48,7 @@ function buildReentryNote(input: SiteLeadIngestInput) {
   return limitNote(lines.join("\n"));
 }
 
-async function resolveStageId(ownerUserId: string) {
+async function resolveStageId(companyId: string) {
   const supabase = createAdminSupabaseClient();
   const { stageId: configuredStageId } = getSiteLeadIntegrationEnv();
 
@@ -56,7 +56,7 @@ async function resolveStageId(ownerUserId: string) {
     const { data, error } = await supabase
       .from("stages")
       .select("id")
-      .eq("owner_user_id", ownerUserId)
+      .eq("company_id", companyId)
       .eq("id", configuredStageId)
       .maybeSingle();
 
@@ -72,7 +72,7 @@ async function resolveStageId(ownerUserId: string) {
   const { data: prospectionStage, error: prospectionError } = await supabase
     .from("stages")
     .select("id")
-    .eq("owner_user_id", ownerUserId)
+    .eq("company_id", companyId)
     .eq("name", "Prospeccao")
     .maybeSingle();
 
@@ -87,7 +87,7 @@ async function resolveStageId(ownerUserId: string) {
   const { data: fallbackStage, error: fallbackError } = await supabase
     .from("stages")
     .select("id")
-    .eq("owner_user_id", ownerUserId)
+    .eq("company_id", companyId)
     .order("position")
     .limit(1)
     .maybeSingle();
@@ -103,12 +103,12 @@ async function resolveStageId(ownerUserId: string) {
   return fallbackStage.id;
 }
 
-async function ensureDeal(ownerUserId: string, contactId: string) {
+async function ensureDeal(companyId: string, contactId: string) {
   const supabase = createAdminSupabaseClient();
   const { data: existingDeal, error: existingDealError } = await supabase
     .from("deals")
     .select("id")
-    .eq("owner_user_id", ownerUserId)
+    .eq("company_id", companyId)
     .eq("contact_id", contactId)
     .maybeSingle();
 
@@ -120,12 +120,12 @@ async function ensureDeal(ownerUserId: string, contactId: string) {
     return existingDeal.id;
   }
 
-  const stageId = await resolveStageId(ownerUserId);
+  const stageId = await resolveStageId(companyId);
   const { data: createdDeal, error: createdDealError } = await supabase
     .from("deals")
     .insert({
+      company_id: companyId,
       contact_id: contactId,
-      owner_user_id: ownerUserId,
       stage_id: stageId,
     })
     .select("id")
@@ -138,7 +138,7 @@ async function ensureDeal(ownerUserId: string, contactId: string) {
   return createdDeal.id;
 }
 
-async function insertNote(ownerUserId: string, dealId: string, body: string | null) {
+async function insertNote(dealId: string, body: string | null) {
   const supabase = createAdminSupabaseClient();
   const normalizedBody = normalizeOptionalText(body ?? undefined);
 
@@ -147,9 +147,10 @@ async function insertNote(ownerUserId: string, dealId: string, body: string | nu
   }
 
   const { error } = await supabase.from("notes").insert({
+    author_name: "Integracao do site",
     body: limitNote(normalizedBody),
     deal_id: dealId,
-    owner_user_id: ownerUserId,
+    author_user_id: null,
   });
 
   if (error) {
@@ -161,7 +162,7 @@ export async function ingestSiteLead(
   input: SiteLeadIngestInput,
 ): Promise<SiteLeadIngestResult> {
   const supabase = createAdminSupabaseClient();
-  const { ownerUserId } = getSiteLeadIntegrationEnv();
+  const { companyId } = getSiteLeadIntegrationEnv();
   const phone = input.phone.trim();
   const phoneNormalized = normalizePhone(phone);
   const email = normalizeOptionalText(input.email);
@@ -170,7 +171,7 @@ export async function ingestSiteLead(
   const { data: existingContact, error: existingContactError } = await supabase
     .from("contacts")
     .select("id")
-    .eq("owner_user_id", ownerUserId)
+    .eq("company_id", companyId)
     .eq("phone_normalized", phoneNormalized)
     .maybeSingle();
 
@@ -189,14 +190,14 @@ export async function ingestSiteLead(
         phone_normalized: phoneNormalized,
       })
       .eq("id", existingContact.id)
-      .eq("owner_user_id", ownerUserId);
+      .eq("company_id", companyId);
 
     if (updatedContactError) {
       throw new Error(updatedContactError.message);
     }
 
-    const dealId = await ensureDeal(ownerUserId, existingContact.id);
-    await insertNote(ownerUserId, dealId, buildReentryNote(input));
+    const dealId = await ensureDeal(companyId, existingContact.id);
+    await insertNote(dealId, buildReentryNote(input));
 
     return {
       action: "updated",
@@ -204,14 +205,14 @@ export async function ingestSiteLead(
     };
   }
 
-  const stageId = await resolveStageId(ownerUserId);
+  const stageId = await resolveStageId(companyId);
   const { data: createdContact, error: createdContactError } = await supabase
     .from("contacts")
     .insert({
+      company_id: companyId,
       email,
       name: input.name.trim(),
       origin,
-      owner_user_id: ownerUserId,
       phone,
       phone_normalized: phoneNormalized,
     })
@@ -225,8 +226,8 @@ export async function ingestSiteLead(
   const { data: createdDeal, error: createdDealError } = await supabase
     .from("deals")
     .insert({
+      company_id: companyId,
       contact_id: createdContact.id,
-      owner_user_id: ownerUserId,
       stage_id: stageId,
     })
     .select("id")
@@ -236,7 +237,7 @@ export async function ingestSiteLead(
     throw new Error(createdDealError.message);
   }
 
-  await insertNote(ownerUserId, createdDeal.id, input.note);
+  await insertNote(createdDeal.id, input.note);
 
   return {
     action: "created",

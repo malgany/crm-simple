@@ -1,19 +1,38 @@
-import { redirect } from "next/navigation";
 import { KanbanPage } from "@/components/kanban/kanban-page";
+import { requirePageContext } from "@/lib/auth";
 import { loadBoardData } from "@/lib/board-data";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export default async function NegotiationsPage() {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+type NegotiationsPageProps = {
+  searchParams: Promise<{
+    companyId?: string | string[];
+  }>;
+};
 
-  if (!user) {
-    redirect("/login");
-  }
+function getSearchParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
-  const board = await loadBoardData(supabase);
+export default async function NegotiationsPage({
+  searchParams,
+}: NegotiationsPageProps) {
+  const params = await searchParams;
+  const companyId = getSearchParam(params.companyId);
+  const context = await requirePageContext({
+    companyId,
+    requireCompany: true,
+    superadminFallback: "/admin/empresas",
+  });
+  const board = await loadBoardData(context.company!.id);
 
-  return <KanbanPage initialStages={board.stages} userEmail={user.email ?? ""} />;
+  return (
+    <KanbanPage
+      canManageStages={context.effectiveCompanyRole === "admin"}
+      canManageUsers={
+        !context.viewer.isSuperadmin && context.effectiveCompanyRole === "admin"
+      }
+      companyId={context.company!.id}
+      initialStages={board.stages}
+      viewer={context.viewer}
+    />
+  );
 }
