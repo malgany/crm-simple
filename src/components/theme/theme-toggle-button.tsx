@@ -22,7 +22,7 @@ export function ThemeToggleButton({
     ? isMounted
       ? `Tema ${isDark ? "escuro" : "claro"}`
       : "Tema"
-    : "Alternar tema (Claro / Escuro)";
+    : "Alternar tema";
 
   return (
     <Button
