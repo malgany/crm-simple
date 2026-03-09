@@ -21,7 +21,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     if (context.viewer.isSuperadmin) {
       throw new AppHttpError(
         403,
-        "Use a area de empresas para editar usuarios desta empresa.",
+        "Use a área de empresas para editar usuários desta empresa.",
       );
     }
 
@@ -38,7 +38,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       user,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel atualizar o usuario.");
+    return jsonError(error, "Não foi possível atualizar o usuário.");
   }
 }
 
@@ -53,7 +53,7 @@ export async function DELETE(request: Request, { params }: RouteContext) {
     if (context.viewer.isSuperadmin) {
       throw new AppHttpError(
         403,
-        "Use a area de empresas para excluir usuarios desta empresa.",
+        "Use a área de empresas para excluir usuários desta empresa.",
       );
     }
 
@@ -64,6 +64,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       ok: true,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel excluir o usuario.");
+    return jsonError(error, "Não foi possível excluir o usuário.");
   }
 }

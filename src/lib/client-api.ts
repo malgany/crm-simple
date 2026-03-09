@@ -35,7 +35,7 @@ export async function requestApi<T>(
   }
 
   if (!response.ok || !payload?.ok) {
-    throw new Error(payload?.message || "Nao foi possivel concluir a solicitacao.");
+    throw new Error(payload?.message || "Não foi possível concluir a solicitacao.");
   }
 
   return payload;

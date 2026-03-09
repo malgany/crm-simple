@@ -15,7 +15,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const routeParams = await params;
@@ -33,6 +33,6 @@ export async function POST(request: Request, { params }: RouteContext) {
       user,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel criar o usuario da empresa.");
+    return jsonError(error, "Não foi possível criar o usuário da empresa.");
   }
 }

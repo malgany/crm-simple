@@ -283,7 +283,7 @@ export function KanbanPage({
       return true;
     } catch (error) {
       setStages(previousStages);
-      toast.error(getErrorMessage(error, "Nao foi possivel mover o card."));
+      toast.error(getErrorMessage(error, "Não foi possível mover o card."));
       return false;
     } finally {
       endMutation();
@@ -307,7 +307,7 @@ export function KanbanPage({
       toast.success("Contato criado.");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Nao foi possivel criar o contato."));
+      toast.error(getErrorMessage(error, "Não foi possível criar o contato."));
       return false;
     } finally {
       endMutation();
@@ -354,7 +354,7 @@ export function KanbanPage({
       return true;
     } catch (error) {
       setStages(previousStages);
-      toast.error(getErrorMessage(error, "Nao foi possivel atualizar o contato."));
+      toast.error(getErrorMessage(error, "Não foi possível atualizar o contato."));
       return false;
     } finally {
       endMutation();
@@ -381,7 +381,7 @@ export function KanbanPage({
       toast.success("Observacao registrada.");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Nao foi possivel registrar a observacao."));
+      toast.error(getErrorMessage(error, "Não foi possível registrar a observacao."));
       return false;
     } finally {
       endMutation();
@@ -406,12 +406,12 @@ export function KanbanPage({
       );
 
       pendingRefreshRef.current = true;
-      toast.success("Contato excluido.");
+      toast.success("Contato excluído.");
       return true;
     } catch (error) {
       setStages(previousStages);
       setSelectedDealId(dealId);
-      toast.error(getErrorMessage(error, "Nao foi possivel excluir o contato."));
+      toast.error(getErrorMessage(error, "Não foi possível excluir o contato."));
       return false;
     } finally {
       endMutation();
@@ -457,7 +457,7 @@ export function KanbanPage({
       return true;
     } catch (error) {
       setStages(previousStages);
-      toast.error(getErrorMessage(error, "Nao foi possivel atualizar a assinatura."));
+      toast.error(getErrorMessage(error, "Não foi possível atualizar a assinatura."));
       return false;
     } finally {
       endMutation();
@@ -484,7 +484,7 @@ export function KanbanPage({
       toast.success("Etapas atualizadas.");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Nao foi possivel salvar as etapas."));
+      toast.error(getErrorMessage(error, "Não foi possível salvar as etapas."));
       return false;
     } finally {
       endMutation();
@@ -523,12 +523,12 @@ export function KanbanPage({
     ? "Superadmin"
     : viewer.role === "admin"
       ? "Admin"
-      : "Usuario";
+      : "Usuário";
   const menuItems = [
     ...(viewer.isSuperadmin || canManageUsers
       ? [{
         icon: Users,
-        label: "Usuarios",
+        label: "Usuários",
         onSelect: () => router.push(usersPath),
       }]
       : []),

@@ -9,7 +9,7 @@ export async function GET() {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const companies = await listCompanies();
@@ -19,7 +19,7 @@ export async function GET() {
       companies,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel carregar as empresas.");
+    return jsonError(error, "Não foi possível carregar as empresas.");
   }
 }
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const payload = companyCreateSchema.parse(await parseJsonBody(request));
@@ -39,6 +39,6 @@ export async function POST(request: Request) {
       company,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel criar a empresa.");
+    return jsonError(error, "Não foi possível criar a empresa.");
   }
 }

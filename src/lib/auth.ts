@@ -71,7 +71,7 @@ function buildViewer(user: User, membership: MembershipRow | null, company: Comp
     email: user.email ?? membership?.email ?? "",
     id: user.id,
     isSuperadmin: false,
-    name: membership?.name ?? user.email ?? "Usuario",
+    name: membership?.name ?? user.email ?? "Usuário",
     role: membership?.role ?? "member",
     status: membership?.status ?? "inactive",
   };
@@ -134,7 +134,7 @@ export async function getAppContext(options?: {
         : null;
 
     if (options?.companyId && !company) {
-      throw new AppHttpError(404, "Empresa nao encontrada.");
+      throw new AppHttpError(404, "Empresa não encontrada.");
     }
 
     const viewer = buildViewer(user, null, company);
@@ -237,11 +237,11 @@ export async function requireApiContext(options?: {
   const context = await getAppContext(options);
 
   if (!context) {
-    throw new AppHttpError(401, "Sessao nao encontrada.");
+    throw new AppHttpError(401, "Sessao não encontrada.");
   }
 
   if (context.isBlocked) {
-    throw new AppHttpError(403, "Acesso bloqueado para este usuario ou empresa.");
+    throw new AppHttpError(403, "Acesso bloqueado para este usuário ou empresa.");
   }
 
   if (options?.requireCompany && !context.companyContext) {
@@ -249,7 +249,7 @@ export async function requireApiContext(options?: {
   }
 
   if (options?.requireAdmin && context.effectiveCompanyRole !== "admin") {
-    throw new AppHttpError(403, "Permissao insuficiente.");
+    throw new AppHttpError(403, "Permissão insuficiente.");
   }
 
   return context;

@@ -13,7 +13,7 @@ export default async function LoginPage() {
 
   return (
     <AuthCard
-      description="Entre com seu e-mail e senha para acessar sua empresa ou a area global."
+      description="Entre com seu e-mail e senha para acessar sua empresa ou a área global."
       eyebrow="Acesso"
       footer={
         <p>

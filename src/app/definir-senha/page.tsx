@@ -38,7 +38,7 @@ export default async function SetPasswordPage({
   if (!mode || !user) {
     return (
       <AuthCard
-        description="Esse link nao pode mais ser usado para criar ou redefinir senha."
+        description="Esse link não pode mais ser usado para criar ou redefinir senha."
         eyebrow="Acesso"
         footer={
           <p>
@@ -48,7 +48,7 @@ export default async function SetPasswordPage({
             </Link>
           </p>
         }
-        title="Link invalido ou expirado"
+        title="Link inválido ou expirado"
       >
         <div className="rounded-[1.75rem] border border-[rgba(185,56,47,0.2)] bg-[rgba(185,56,47,0.08)] p-5 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(185,56,47,0.2)] bg-white/80 text-[var(--danger)]">

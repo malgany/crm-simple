@@ -50,7 +50,7 @@ export default async function CompaniesPage() {
               <div>
                 <p className="text-lg font-semibold text-[var(--foreground)]">{company.name}</p>
                 <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                  {company.totalUsers} usuario(s) • {company.adminCount} admin(s) • {company.memberCount} membro(s)
+                  {company.totalUsers} usuário(s) • {company.adminCount} admin(s) • {company.memberCount} membro(s)
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">

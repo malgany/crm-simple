@@ -17,7 +17,7 @@ export default async function SignupPage() {
       eyebrow="Acesso"
       footer={
         <p>
-          Ja tem acesso?{" "}
+          Já tem acesso?{" "}
           <Link className="font-semibold text-[var(--primary)]" href="/login">
             Entrar
           </Link>

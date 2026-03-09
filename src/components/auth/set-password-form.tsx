@@ -17,7 +17,7 @@ const passwordSchema = z
     confirmPassword: z.string().min(1, "Confirme sua senha."),
   })
   .refine((values) => values.password === values.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 

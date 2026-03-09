@@ -49,7 +49,7 @@ export function CompanyCreatePage() {
       router.replace(`/admin/empresas/${response.company.id}`);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar a empresa.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar a empresa.");
     } finally {
       setIsSaving(false);
     }
@@ -68,7 +68,7 @@ export function CompanyCreatePage() {
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">Nova empresa</h1>
             <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              Cadastre a empresa e os usuarios iniciais. Pelo menos um admin ativo e obrigatorio.
+              Cadastre a empresa e os usuários iniciais. Pelo menos um admin ativo e obrigatório.
             </p>
             <div className="mt-4">
               <Button asChild type="button" variant="outline">
@@ -103,7 +103,7 @@ export function CompanyCreatePage() {
           >
             <div className="mb-3 flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Usuario {String(index + 1).padStart(2, "0")}
+                Usuário {String(index + 1).padStart(2, "0")}
               </p>
               {users.length > 1 ? (
                 <Button
@@ -196,7 +196,7 @@ export function CompanyCreatePage() {
                   value={user.role}
                 >
                   <option value="admin">Admin</option>
-                  <option value="member">Usuario</option>
+                  <option value="member">Usuário</option>
                 </select>
               </div>
               <div className="space-y-2">
@@ -233,7 +233,7 @@ export function CompanyCreatePage() {
           variant="secondary"
         >
           <Plus className="h-4 w-4" />
-          Adicionar usuario
+          Adicionar usuário
         </Button>
         <Button disabled={isSaving} onClick={submit} type="button">
           {isSaving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}

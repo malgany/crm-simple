@@ -219,7 +219,7 @@ export function ContactDialog({
               style={{ background: "var(--subtle-surface)" }}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                Acoes rapidas
+                Ações rápidas
               </p>
               <div className="mt-3 flex flex-wrap gap-3">
                 <ContactShortcut
@@ -240,7 +240,7 @@ export function ContactDialog({
               <p className="mt-3 text-sm text-[var(--muted-foreground)]">
                 {card.assignedUser
                   ? `Acompanhado por ${card.assignedUser.name}.`
-                  : "Nenhum usuario assinou este card ainda."}
+                  : "Nenhum usuário assinou este card ainda."}
               </p>
             </div>
             <form className="space-y-5" onSubmit={handleUpdateContact}>
@@ -390,7 +390,7 @@ export function ContactDialog({
                   className="rounded-[1.5rem] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
                   style={{ background: "var(--panel-surface)" }}
                 >
-                  Ainda nao ha observacoes para {card.contact.name}. O telefone
+                  Ainda não ha observacoes para {card.contact.name}. O telefone
                   principal e {formatPhone(card.contact.phone)}.
                 </div>
               )}
@@ -408,7 +408,7 @@ export function ContactDialog({
             </DialogTitle>
             <DialogDescription>
               Gostaria mesmo de excluir <strong>{card.contact.name}</strong>? Esta
-              acao remove o card e as observacoes vinculadas.
+              ação remove o card e as observacoes vinculadas.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3">
@@ -431,7 +431,7 @@ export function ContactDialog({
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Confirmar exclusao
+              Confirmar exclusão
             </Button>
           </div>
         </DialogContent>

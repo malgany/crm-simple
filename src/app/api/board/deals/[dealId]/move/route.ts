@@ -28,6 +28,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       moved,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel mover o card.");
+    return jsonError(error, "Não foi possível mover o card.");
   }
 }

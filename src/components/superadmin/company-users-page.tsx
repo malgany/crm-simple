@@ -7,6 +7,7 @@ import {
   Plus,
   RotateCcw,
   Shield,
+  Skull,
   SunMoon,
   Trash2,
   Users,
@@ -107,6 +108,7 @@ export function CompanyUsersPage({
   const [editingUser, setEditingUser] = useState<EditUserForm | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [restoringUserId, setRestoringUserId] = useState<string | null>(null);
+  const [permanentlyDeletingUserId, setPermanentlyDeletingUserId] = useState<string | null>(null);
 
   const activeUsers = useMemo(
     () => users.filter((user) => user.status !== "deleted"),
@@ -135,7 +137,7 @@ export function CompanyUsersPage({
       setCompanyState(response.company);
       toast.success("Empresa atualizada.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar a empresa.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a empresa.");
     } finally {
       setIsSavingCompany(false);
     }
@@ -155,9 +157,9 @@ export function CompanyUsersPage({
 
       setUsers((current) => sortUsers([...current, response.user]));
       setCreateForm({ ...emptyUserForm });
-      toast.success("Usuario criado.");
+      toast.success("Usuário criado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o usuário.");
     } finally {
       setIsCreatingUser(false);
     }
@@ -185,9 +187,9 @@ export function CompanyUsersPage({
         ),
       );
       setEditingUser(null);
-      toast.success("Usuario atualizado.");
+      toast.success("Usuário atualizado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o usuário.");
     } finally {
       setIsSavingEdit(false);
     }
@@ -212,9 +214,9 @@ export function CompanyUsersPage({
           ),
         ),
       );
-      toast.success("Usuario excluido.");
+      toast.success("Usuário excluído.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o usuário.");
     }
   };
 
@@ -232,11 +234,43 @@ export function CompanyUsersPage({
       setUsers((current) =>
         sortUsers(current.map((item) => (item.id === user.id ? response.user : item))),
       );
-      toast.success("Usuario restaurado como inativo.");
+      toast.success("Usuário restaurado como inativo.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel restaurar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível restaurar o usuário.");
     } finally {
       setRestoringUserId(null);
+    }
+  };
+
+  const permanentlyDeleteUser = async (user: UserManagementItem) => {
+    if (
+      !window.confirm(
+        `Excluir definitivamente ${user.name}? Esta ação remove o usuário e os vínculos relacionados sem possibilidade de restauração.`,
+      )
+    ) {
+      return;
+    }
+
+    setPermanentlyDeletingUserId(user.id);
+
+    try {
+      await requestApi(
+        `/api/superadmin/companies/${companyState.id}/users/${user.id}/permanent-delete`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      toast.success("Usuário excluído definitivamente.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível excluir definitivamente o usuário.",
+      );
+    } finally {
+      setPermanentlyDeletingUserId(null);
     }
   };
 
@@ -265,7 +299,7 @@ export function CompanyUsersPage({
       />
 
       <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestao da empresa</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestão da empresa</h1>
       </section>
 
       <section
@@ -313,7 +347,7 @@ export function CompanyUsersPage({
       >
         <div className="mb-4 flex items-center gap-2">
           <Users className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuario</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuário</h2>
         </div>
         <form
           autoComplete="off"
@@ -389,7 +423,7 @@ export function CompanyUsersPage({
               value={createForm.role}
             >
               <option value="admin">Admin</option>
-              <option value="member">Usuario</option>
+              <option value="member">Usuário</option>
             </select>
           </div>
           <div className="space-y-2">
@@ -412,7 +446,7 @@ export function CompanyUsersPage({
           <div className="md:col-span-2 mt-4 flex justify-end">
             <Button disabled={isCreatingUser} type="submit">
               {isCreatingUser ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Adicionar usuario
+              Adicionar usuário
             </Button>
           </div>
         </form>
@@ -429,7 +463,7 @@ export function CompanyUsersPage({
               <div>
                 <p className="text-base font-semibold text-[var(--foreground)]">{user.name}</p>
                 <p className="text-sm text-[var(--muted-foreground)]">
-                  {user.email} - {user.role === "admin" ? "Admin" : "Usuario"}
+                  {user.email} - {user.role === "admin" ? "Admin" : "Usuário"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -466,7 +500,7 @@ export function CompanyUsersPage({
       {deletedUsers.length ? (
         <section className="mt-6">
           <div className="mb-3 px-1">
-            <h2 className="text-lg font-semibold text-[var(--foreground)]">Usuarios deletados</h2>
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">Usuários deletados</h2>
           </div>
           <div className="space-y-3">
             {deletedUsers.map((user) => (
@@ -481,15 +515,29 @@ export function CompanyUsersPage({
                       {user.name}
                     </p>
                     <p className="text-sm text-[var(--muted-foreground)]">
-                      {user.email} - {user.role === "admin" ? "Admin" : "Usuario"}
+                      {user.email} - {user.role === "admin" ? "Admin" : "Usuário"}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[var(--danger)]/15 px-3 py-1 text-xs font-semibold text-[var(--danger)]">
-                      Excluido
+                      Excluído
                     </span>
                     <Button
-                      disabled={restoringUserId === user.id}
+                      className="border-[var(--danger)]/30 text-[var(--danger)] hover:border-[var(--danger)]/40 hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
+                      disabled={permanentlyDeletingUserId === user.id || restoringUserId === user.id}
+                      onClick={() => permanentlyDeleteUser(user)}
+                      type="button"
+                      variant="outline"
+                    >
+                      {permanentlyDeletingUserId === user.id ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Skull className="h-4 w-4" />
+                      )}
+                      Excluir definitivamente
+                    </Button>
+                    <Button
+                      disabled={restoringUserId === user.id || permanentlyDeletingUserId === user.id}
                       onClick={() => restoreUser(user)}
                       type="button"
                       variant="outline"
@@ -499,7 +547,7 @@ export function CompanyUsersPage({
                       ) : (
                         <RotateCcw className="h-4 w-4" />
                       )}
-                      Restaurar usuario
+                      Restaurar usuário
                     </Button>
                   </div>
                 </div>
@@ -512,9 +560,9 @@ export function CompanyUsersPage({
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar usuario da empresa</DialogTitle>
+            <DialogTitle>Editar usuário da empresa</DialogTitle>
             <DialogDescription>
-              Atualize papel, dados de acesso e status do usuario.
+              Atualize papel, dados de acesso e status do usuário.
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (
@@ -572,7 +620,7 @@ export function CompanyUsersPage({
                     value={editingUser.role}
                   >
                     <option value="admin">Admin</option>
-                    <option value="member">Usuario</option>
+                    <option value="member">Usuário</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -637,7 +685,7 @@ export function CompanyUsersPage({
                 </Button>
                 <Button disabled={isSavingEdit} type="submit">
                   {isSavingEdit ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-                  Salvar usuario
+                  Salvar usuário
                 </Button>
               </div>
             </form>

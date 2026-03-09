@@ -16,6 +16,6 @@ export async function GET(request: Request) {
       board,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel carregar o quadro.");
+    return jsonError(error, "Não foi possível carregar o quadro.");
   }
 }

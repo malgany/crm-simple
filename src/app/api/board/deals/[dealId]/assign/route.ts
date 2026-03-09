@@ -32,6 +32,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       assignedUser,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel atualizar a assinatura do card.");
+    return jsonError(error, "Não foi possível atualizar a assinatura do card.");
   }
 }

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Token invalido.",
+        message: "Token inválido.",
       },
       { status: 401 },
     );
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message: "Payload invalido.",
+        message: "Payload inválido.",
       },
       { status: 400 },
     );
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        message: getErrorMessage(error, "Nao foi possivel processar o lead."),
+        message: getErrorMessage(error, "Não foi possível processar o lead."),
       },
       { status: 500 },
     );

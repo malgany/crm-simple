@@ -52,7 +52,7 @@ export function ResetPasswordDialog({
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (!userEmail.trim()) {
-      toast.error("Nao foi possivel identificar o usuario da sessao.");
+      toast.error("Não foi possível identificar o usuário da sessao.");
       return;
     }
 
@@ -62,7 +62,7 @@ export function ResetPasswordDialog({
     });
 
     if (signInError) {
-      toast.error("Senha atual invalida.");
+      toast.error("Senha atual inválida.");
       return;
     }
 

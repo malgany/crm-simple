@@ -114,7 +114,7 @@ async function loadCompanyStage(companyId: string, stageId: string) {
   throwIfError(error);
 
   if (!data) {
-    throw new Error("Etapa invalida para esta empresa.");
+    throw new Error("Etapa inválida para esta empresa.");
   }
 
   return data;
@@ -132,7 +132,7 @@ async function loadCompanyDeal(companyId: string, dealId: string) {
   throwIfError(error);
 
   if (!data) {
-    throw new Error("Negociacao nao encontrada.");
+    throw new Error("Negociação não encontrada.");
   }
 
   return data;
@@ -150,7 +150,7 @@ async function loadCompanyContact(companyId: string, contactId: string) {
   throwIfError(error);
 
   if (!data) {
-    throw new Error("Contato nao encontrado.");
+    throw new Error("Contato não encontrado.");
   }
 
   return data;
@@ -177,7 +177,7 @@ async function ensureDuplicatePhoneAvailable(
   throwIfError(error);
 
   if (data) {
-    throw new Error(`Ja existe um contato com este telefone: ${data.name}.`);
+    throw new Error(`Já existe um contato com este telefone: ${data.name}.`);
   }
 }
 
@@ -220,7 +220,7 @@ async function ensureCompanyUser(companyId: string, companyUserId: string) {
   throwIfError(error);
 
   if (!data) {
-    throw new Error("Usuario nao encontrado nesta empresa.");
+    throw new Error("Usuário não encontrado nesta empresa.");
   }
 
   return data;
@@ -240,7 +240,7 @@ async function createAuthUser(input: CreateUserInput) {
   throwIfError(error);
 
   if (!data.user) {
-    throw new Error("Nao foi possivel criar o usuario de autenticacao.");
+    throw new Error("Não foi possível criar o usuário de autenticação.");
   }
 
   return data.user;
@@ -290,7 +290,7 @@ async function createCompanyUserRow(companyId: string, authUserId: string, input
     .single();
 
   throwIfError(error);
-  return requireData(data, "Usuario criado sem retorno valido.");
+  return requireData(data, "Usuário criado sem retorno valido.");
 }
 
 function buildCard(
@@ -443,7 +443,7 @@ export async function createContactWithDeal(companyId: string, values: ContactSc
     .single();
 
   throwIfError(dealError);
-  const savedDeal = requireData(deal, "O negocio foi criado sem retorno valido.");
+  const savedDeal = requireData(deal, "O negócio foi criado sem retorno valido.");
 
   return buildCard(savedDeal, savedContact, [], new Map());
 }
@@ -518,7 +518,7 @@ export async function moveDeal(companyId: string, dealId: string, stageId: strin
     .single();
 
   throwIfError(error);
-  const updatedDeal = requireData(data, "Negociacao atualizada sem retorno valido.");
+  const updatedDeal = requireData(data, "Negociação atualizada sem retorno valido.");
 
   return {
     movedAt: updatedDeal.moved_at,
@@ -545,7 +545,7 @@ export async function assignDeal(
     throwIfError(error);
 
     if (!data) {
-      throw new Error("Usuario selecionado nao esta ativo nesta empresa.");
+      throw new Error("Usuário selecionado não esta ativo nesta empresa.");
     }
   }
 
@@ -560,7 +560,7 @@ export async function assignDeal(
     .single();
 
   throwIfError(error);
-  const updatedDeal = requireData(data, "Negociacao atualizada sem retorno valido.");
+  const updatedDeal = requireData(data, "Negociação atualizada sem retorno valido.");
 
   if (!updatedDeal.assigned_user_id) {
     return null;
@@ -734,7 +734,7 @@ export async function updateMember(
   const companyUser = await ensureCompanyUser(companyId, companyUserId);
 
   if (companyUser.role !== "member") {
-    throw new Error("Este modulo permite editar apenas usuarios comuns.");
+    throw new Error("Este módulo permite editar apenas usuários comuns.");
   }
 
   await updateAuthUser(companyUser.auth_user_id, {
@@ -758,7 +758,7 @@ export async function updateMember(
     .single();
 
   throwIfError(error);
-  const updatedUser = requireData(data, "Usuario atualizado sem retorno valido.");
+  const updatedUser = requireData(data, "Usuário atualizado sem retorno valido.");
 
   return {
     ...toCompanyUserSummary(updatedUser),
@@ -771,7 +771,7 @@ export async function softDeleteMember(companyId: string, companyUserId: string)
   const companyUser = await ensureCompanyUser(companyId, companyUserId);
 
   if (companyUser.role !== "member") {
-    throw new Error("Este modulo permite excluir apenas usuarios comuns.");
+    throw new Error("Este módulo permite excluir apenas usuários comuns.");
   }
 
   const { error } = await admin
@@ -834,7 +834,7 @@ export async function getCompanyDetail(companyId: string) {
   throwIfError(usersResult.error);
 
   if (!companyResult.data) {
-    throw new Error("Empresa nao encontrada.");
+    throw new Error("Empresa não encontrada.");
   }
 
   return {
@@ -974,7 +974,7 @@ export async function updateCompanyUser(
     .single();
 
   throwIfError(error);
-  const updatedUser = requireData(data, "Usuario atualizado sem retorno valido.");
+  const updatedUser = requireData(data, "Usuário atualizado sem retorno valido.");
 
   return {
     ...toCompanyUserSummary(updatedUser),
@@ -1010,7 +1010,7 @@ export async function restoreCompanyUser(companyId: string, companyUserId: strin
   const user = await ensureCompanyUser(companyId, companyUserId);
 
   if (user.status !== "deleted") {
-    throw new Error("Este usuario nao esta excluido.");
+    throw new Error("Este usuário não esta excluído.");
   }
 
   const { data, error } = await admin
@@ -1025,10 +1025,20 @@ export async function restoreCompanyUser(companyId: string, companyUserId: strin
     .single();
 
   throwIfError(error);
-  const restoredUser = requireData(data, "Usuario restaurado sem retorno valido.");
+  const restoredUser = requireData(data, "Usuário restaurado sem retorno valido.");
 
   return {
     ...toCompanyUserSummary(restoredUser),
     id: restoredUser.id,
   } satisfies UserManagementItem;
+}
+
+export async function permanentlyDeleteCompanyUser(companyId: string, companyUserId: string) {
+  const user = await ensureCompanyUser(companyId, companyUserId);
+
+  if (user.status !== "deleted") {
+    throw new Error("A exclusão definitiva so pode ser feita para usuários já excluídos.");
+  }
+
+  await deleteAuthUser(user.auth_user_id);
 }

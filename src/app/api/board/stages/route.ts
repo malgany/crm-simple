@@ -19,6 +19,6 @@ export async function PUT(request: Request) {
       stages,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel salvar as etapas.");
+    return jsonError(error, "Não foi possível salvar as etapas.");
   }
 }

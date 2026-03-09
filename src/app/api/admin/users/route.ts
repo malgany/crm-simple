@@ -18,7 +18,7 @@ export async function GET(request: Request) {
       users,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel carregar os usuarios.");
+    return jsonError(error, "Não foi possível carregar os usuários.");
   }
 }
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     if (context.viewer.isSuperadmin) {
       throw new AppHttpError(
         403,
-        "Use a area de empresas para cadastrar admins ou usuarios globais.",
+        "Use a área de empresas para cadastrar admins ou usuários globais.",
       );
     }
 
@@ -45,6 +45,6 @@ export async function POST(request: Request) {
       user,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel criar o usuario.");
+    return jsonError(error, "Não foi possível criar o usuário.");
   }
 }

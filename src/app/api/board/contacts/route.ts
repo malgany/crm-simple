@@ -18,6 +18,6 @@ export async function POST(request: Request) {
       card,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel criar o contato.");
+    return jsonError(error, "Não foi possível criar o contato.");
   }
 }

@@ -15,7 +15,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const routeParams = await params;
@@ -27,6 +27,6 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       company,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel atualizar a empresa.");
+    return jsonError(error, "Não foi possível atualizar a empresa.");
   }
 }

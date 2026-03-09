@@ -25,7 +25,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       contact,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel atualizar o contato.");
+    return jsonError(error, "Não foi possível atualizar o contato.");
   }
 }
 
@@ -43,6 +43,6 @@ export async function DELETE(request: Request, { params }: RouteContext) {
       ok: true,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel excluir o contato.");
+    return jsonError(error, "Não foi possível excluir o contato.");
   }
 }

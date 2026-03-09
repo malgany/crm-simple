@@ -53,7 +53,7 @@ export function LoginForm() {
             autoComplete="email"
             className="pl-11"
             id="login-email"
-            placeholder="voce@empresa.com"
+            placeholder="você@empresa.com"
             {...form.register("email")}
           />
         </div>

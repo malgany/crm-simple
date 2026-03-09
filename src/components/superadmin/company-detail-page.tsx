@@ -93,7 +93,7 @@ export function CompanyDetailPage({
       setCompanyState(response.company);
       toast.success("Empresa atualizada.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar a empresa.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar a empresa.");
     } finally {
       setIsSavingCompany(false);
     }
@@ -117,9 +117,9 @@ export function CompanyDetailPage({
         ),
       );
       setCreateForm(emptyUserForm);
-      toast.success("Usuario criado.");
+      toast.success("Usuário criado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o usuário.");
     } finally {
       setIsCreatingUser(false);
     }
@@ -147,9 +147,9 @@ export function CompanyDetailPage({
           .sort((left, right) => left.name.localeCompare(right.name, "pt-BR")),
       );
       setEditingUser(null);
-      toast.success("Usuario atualizado.");
+      toast.success("Usuário atualizado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o usuário.");
     } finally {
       setIsSavingEdit(false);
     }
@@ -168,9 +168,9 @@ export function CompanyDetailPage({
         },
       );
       setUsers((current) => current.filter((item) => item.id !== user.id));
-      toast.success("Usuario excluido.");
+      toast.success("Usuário excluído.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o usuário.");
     }
   };
 
@@ -237,7 +237,7 @@ export function CompanyDetailPage({
       <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
         <div className="mb-4 flex items-center gap-2">
           <Users className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-slate-950">Novo usuario</h2>
+          <h2 className="text-lg font-semibold text-slate-950">Novo usuário</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -294,7 +294,7 @@ export function CompanyDetailPage({
               value={createForm.role}
             >
               <option value="admin">Admin</option>
-              <option value="member">Usuario</option>
+              <option value="member">Usuário</option>
             </select>
           </div>
           <div className="space-y-2">
@@ -317,7 +317,7 @@ export function CompanyDetailPage({
         <div className="mt-4 flex justify-end">
           <Button disabled={isCreatingUser} onClick={createUser} type="button">
             {isCreatingUser ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Adicionar usuario
+            Adicionar usuário
           </Button>
         </div>
       </section>
@@ -332,7 +332,7 @@ export function CompanyDetailPage({
               <div>
                 <p className="text-base font-semibold text-slate-950">{user.name}</p>
                 <p className="text-sm text-slate-600">
-                  {user.email} • {user.role === "admin" ? "Admin" : "Usuario"}
+                  {user.email} • {user.role === "admin" ? "Admin" : "Usuário"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -356,9 +356,9 @@ export function CompanyDetailPage({
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar usuario da empresa</DialogTitle>
+            <DialogTitle>Editar usuário da empresa</DialogTitle>
             <DialogDescription>
-              Atualize papel, dados de acesso e status do usuario.
+              Atualize papel, dados de acesso e status do usuário.
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (
@@ -403,7 +403,7 @@ export function CompanyDetailPage({
                     value={editingUser.role}
                   >
                     <option value="admin">Admin</option>
-                    <option value="member">Usuario</option>
+                    <option value="member">Usuário</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -461,7 +461,7 @@ export function CompanyDetailPage({
                 </Button>
                 <Button disabled={isSavingEdit} onClick={saveUserEdit} type="button">
                   {isSavingEdit ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-                  Salvar usuario
+                  Salvar usuário
                 </Button>
               </div>
             </div>

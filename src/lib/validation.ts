@@ -57,22 +57,22 @@ export const changePasswordSchema = z
     password: passwordField,
   })
   .refine((value) => value.password === value.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
 export const moveDealSchema = z.object({
-  dealId: z.string().uuid("Deal invalido."),
-  stageId: z.string().uuid("Etapa invalida."),
+  dealId: z.string().uuid("Deal inválido."),
+  stageId: z.string().uuid("Etapa inválida."),
 });
 
 export const assignDealSchema = z.object({
-  assignedUserId: z.string().uuid("Usuario invalido.").nullable(),
-  dealId: z.string().uuid("Deal invalido."),
+  assignedUserId: z.string().uuid("Usuário inválido.").nullable(),
+  dealId: z.string().uuid("Deal inválido."),
 });
 
 export const stageDraftSchema = z.object({
-  id: z.string().min(1, "Etapa invalida."),
+  id: z.string().min(1, "Etapa inválida."),
   isNew: z.boolean().optional(),
   name: z.string().trim().min(1, "Informe o nome da etapa.").max(80),
   position: z.number().int().min(0),
@@ -90,11 +90,11 @@ export const memberCreateSchema = z
   .object({
     confirmPassword: z.string().min(1, "Confirme a senha."),
     email: emailField,
-    name: z.string().trim().min(1, "Informe o nome do usuario.").max(120),
+    name: z.string().trim().min(1, "Informe o nome do usuário.").max(120),
     password: passwordField,
   })
   .refine((value) => value.password === value.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
@@ -102,7 +102,7 @@ export const memberUpdateSchema = z
   .object({
     confirmPassword: z.string().optional().or(z.literal("")),
     email: emailField,
-    name: z.string().trim().min(1, "Informe o nome do usuario.").max(120),
+    name: z.string().trim().min(1, "Informe o nome do usuário.").max(120),
     password: z.string().optional().or(z.literal("")),
     status: companyUserStatusSchema.exclude(["deleted"]),
   })
@@ -125,7 +125,7 @@ export const memberUpdateSchema = z
     if (nextPassword !== confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "As senhas nao conferem.",
+        message: "As senhas não conferem.",
         path: ["confirmPassword"],
       });
     }
@@ -136,13 +136,13 @@ export const companyUserDraftSchema = z
     confirmPassword: z.string().min(1, "Confirme a senha."),
     email: emailField,
     id: z.string().min(1),
-    name: z.string().trim().min(1, "Informe o nome do usuario.").max(120),
+    name: z.string().trim().min(1, "Informe o nome do usuário.").max(120),
     password: passwordField,
     role: companyUserRoleSchema,
     status: companyUserStatusSchema.exclude(["deleted"]),
   })
   .refine((value) => value.password === value.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
@@ -150,13 +150,13 @@ export const companyUserCreateSchema = z
   .object({
     confirmPassword: z.string().min(1, "Confirme a senha."),
     email: emailField,
-    name: z.string().trim().min(1, "Informe o nome do usuario.").max(120),
+    name: z.string().trim().min(1, "Informe o nome do usuário.").max(120),
     password: passwordField,
     role: companyUserRoleSchema,
     status: z.enum(["active", "inactive"]),
   })
   .refine((value) => value.password === value.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
@@ -164,7 +164,7 @@ export const companyUserUpdateSchema = z
   .object({
     confirmPassword: z.string().optional().or(z.literal("")),
     email: emailField,
-    name: z.string().trim().min(1, "Informe o nome do usuario.").max(120),
+    name: z.string().trim().min(1, "Informe o nome do usuário.").max(120),
     password: z.string().optional().or(z.literal("")),
     role: companyUserRoleSchema,
     status: companyUserStatusSchema.exclude(["deleted"]),
@@ -188,7 +188,7 @@ export const companyUserUpdateSchema = z
     if (password !== confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "As senhas nao conferem.",
+        message: "As senhas não conferem.",
         path: ["confirmPassword"],
       });
     }
@@ -197,7 +197,7 @@ export const companyUserUpdateSchema = z
 export const companyCreateSchema = z
   .object({
     name: z.string().trim().min(1, "Informe o nome da empresa.").max(120),
-    users: z.array(companyUserDraftSchema).min(1, "Cadastre ao menos um usuario."),
+    users: z.array(companyUserDraftSchema).min(1, "Cadastre ao menos um usuário."),
   })
   .superRefine((value, ctx) => {
     const hasActiveAdmin = value.users.some(

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { AppHttpError, requireApiContext } from "@/lib/auth";
 import { jsonError } from "@/lib/api-helpers";
-import { restoreCompanyUser } from "@/lib/crm";
+import { permanentlyDeleteCompanyUser } from "@/lib/crm";
 
 type RouteContext = {
   params: Promise<{
@@ -10,7 +10,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, { params }: RouteContext) {
+export async function DELETE(_request: Request, { params }: RouteContext) {
   try {
     const context = await requireApiContext();
 
@@ -19,13 +19,12 @@ export async function POST(_request: Request, { params }: RouteContext) {
     }
 
     const routeParams = await params;
-    const user = await restoreCompanyUser(routeParams.companyId, routeParams.companyUserId);
+    await permanentlyDeleteCompanyUser(routeParams.companyId, routeParams.companyUserId);
 
     return NextResponse.json({
       ok: true,
-      user,
     });
   } catch (error) {
-    return jsonError(error, "Não foi possível restaurar o usuário da empresa.");
+    return jsonError(error, "Não foi possível excluir definitivamente o usuário da empresa.");
   }
 }

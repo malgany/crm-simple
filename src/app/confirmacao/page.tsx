@@ -34,7 +34,7 @@ export default async function ConfirmationPage({
       actionHref: "/login",
       actionLabel: "Voltar ao login",
       description:
-        "Enviamos um link de confirmacao para o seu e-mail. Abra a mensagem e finalize a ativacao pelo botao recebido.",
+        "Enviamos um link de confirmacao para o seu e-mail. Abra a mensagem e finalize a ativação pelo botao recebido.",
       eyebrow: "Acesso",
       icon: <MailCheck className="h-6 w-6 text-[var(--primary)]" />,
       iconClassName:
@@ -45,7 +45,7 @@ export default async function ConfirmationPage({
       actionHref: "/",
       actionLabel: "Entrar no CRM",
       description:
-        "Seu e-mail foi confirmado e a sessao ja foi validada. Agora voce pode continuar para o CRM.",
+        "Seu e-mail foi confirmado e a sessao já foi validada. Agora você pode continuar para o CRM.",
       eyebrow: "Confirmacao",
       icon: <CheckCircle2 className="h-6 w-6 text-[var(--primary)]" />,
       iconClassName:
@@ -56,12 +56,12 @@ export default async function ConfirmationPage({
       actionHref: "/login",
       actionLabel: "Ir para o login",
       description:
-        "O link de confirmacao esta invalido ou expirou. Solicite um novo convite ou entre em contato com o administrador.",
+        "O link de confirmacao esta inválido ou expirou. Solicite um novo convite ou entre em contato com o administrador.",
       eyebrow: "Confirmacao",
       icon: <TriangleAlert className="h-6 w-6 text-[var(--danger)]" />,
       iconClassName:
         "border-[rgba(185,56,47,0.2)] bg-[rgba(185,56,47,0.08)] text-[var(--danger)]",
-      title: "Nao foi possivel confirmar",
+      title: "Não foi possível confirmar",
     },
   }[mode];
 
@@ -89,7 +89,7 @@ export default async function ConfirmationPage({
         </div>
         <p className="mt-4 text-sm leading-6 text-slate-600">
           {mode === "pending"
-            ? "Se o e-mail nao aparecer em alguns minutos, verifique spam ou lixo eletronico."
+            ? "Se o e-mail não aparecer em alguns minutos, verifique spam ou lixo eletronico."
             : mode === "success"
               ? "A confirmacao foi processada sem expor tokens na URL final."
               : "Links de invite e recuperacao tambem devem cair aqui quando estiverem expirados."}

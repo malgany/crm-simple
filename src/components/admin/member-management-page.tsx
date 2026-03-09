@@ -108,9 +108,9 @@ export function MemberManagementPage({
         ),
       );
       setCreateForm(emptyCreateForm);
-      toast.success("Usuario criado.");
+      toast.success("Usuário criado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel criar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o usuário.");
     } finally {
       setIsCreating(false);
     }
@@ -137,10 +137,10 @@ export function MemberManagementPage({
         current.map((item) => (item.id === user.id ? response.user : item)),
       );
       toast.success(
-        response.user.status === "active" ? "Usuario reativado." : "Usuario inativado.",
+        response.user.status === "active" ? "Usuário reativado." : "Usuário inativado.",
       );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o usuário.");
     }
   };
 
@@ -159,9 +159,9 @@ export function MemberManagementPage({
       );
 
       setUsers((current) => current.filter((item) => item.id !== user.id));
-      toast.success("Usuario excluido.");
+      toast.success("Usuário excluído.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel excluir o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o usuário.");
     }
   };
 
@@ -188,9 +188,9 @@ export function MemberManagementPage({
           .sort((left, right) => left.name.localeCompare(right.name, "pt-BR")),
       );
       setEditingUser(null);
-      toast.success("Usuario atualizado.");
+      toast.success("Usuário atualizado.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar o usuario.");
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar o usuário.");
     } finally {
       setIsSavingEdit(false);
     }
@@ -208,7 +208,7 @@ export function MemberManagementPage({
           },
           {
             icon: SunMoon,
-            label: "Alternar tema (Claro / Escuro)",
+            label: "Alternar tema",
             onSelect: toggleTheme,
           },
           {
@@ -221,7 +221,7 @@ export function MemberManagementPage({
       />
 
       <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestao de usuarios</h1>
+        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestão de usuários</h1>
       </section>
 
       <section
@@ -230,7 +230,7 @@ export function MemberManagementPage({
       >
         <div className="mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuario</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuário</h2>
         </div>
         <form
           autoComplete="off"
@@ -295,7 +295,7 @@ export function MemberManagementPage({
           <div className="md:col-span-2 mt-4 flex justify-end">
             <Button disabled={isCreating} type="submit">
               {isCreating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Criar usuario
+              Criar usuário
             </Button>
           </div>
         </form>
@@ -362,9 +362,9 @@ export function MemberManagementPage({
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar usuario</DialogTitle>
+            <DialogTitle>Editar usuário</DialogTitle>
             <DialogDescription>
-              Atualize dados do usuario ou altere o status de acesso.
+              Atualize dados do usuário ou altere o status de acesso.
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (

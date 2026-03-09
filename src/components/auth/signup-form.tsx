@@ -18,7 +18,7 @@ const signupSchema = z
     confirmPassword: z.string().min(1, "Confirme sua senha."),
   })
   .refine((values) => values.password === values.confirmPassword, {
-    message: "As senhas nao conferem.",
+    message: "As senhas não conferem.",
     path: ["confirmPassword"],
   });
 
@@ -62,7 +62,7 @@ export function SignupForm() {
             autoComplete="email"
             className="pl-11"
             id="signup-email"
-            placeholder="voce@empresa.com"
+            placeholder="você@empresa.com"
             {...form.register("email")}
           />
         </div>

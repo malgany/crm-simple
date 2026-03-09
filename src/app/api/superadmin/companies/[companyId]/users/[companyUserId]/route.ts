@@ -16,7 +16,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const routeParams = await params;
@@ -34,7 +34,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       user,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel atualizar o usuario da empresa.");
+    return jsonError(error, "Não foi possível atualizar o usuário da empresa.");
   }
 }
 
@@ -43,7 +43,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     const context = await requireApiContext();
 
     if (!context.viewer.isSuperadmin) {
-      throw new AppHttpError(403, "Area restrita ao superadmin.");
+      throw new AppHttpError(403, "Área restrita ao superadmin.");
     }
 
     const routeParams = await params;
@@ -53,6 +53,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       ok: true,
     });
   } catch (error) {
-    return jsonError(error, "Nao foi possivel excluir o usuario da empresa.");
+    return jsonError(error, "Não foi possível excluir o usuário da empresa.");
   }
 }
