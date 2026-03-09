@@ -27,7 +27,7 @@ export default async function CompaniesPage() {
               Cadastre, inative, edite empresas e entre no contexto operacional de qualquer uma.
             </p>
             <div className="mt-4">
-              <Button asChild className="text-[var(--primary-foreground)]" type="button">
+              <Button asChild type="button">
                 <Link href="/admin/empresas/nova">Nova empresa</Link>
               </Button>
             </div>

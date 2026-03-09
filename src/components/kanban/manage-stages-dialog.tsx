@@ -217,7 +217,7 @@ export function ManageStagesDialog({
             </Button>
             <Button disabled={isSaving} onClick={handleSave} type="button">
               {isSaving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-              Salvar alteracoes
+              Salvar alterações
             </Button>
           </div>
         </div>

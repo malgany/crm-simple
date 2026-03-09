@@ -346,10 +346,10 @@ export async function loadBoardData(companyId: string): Promise<BoardData> {
       : Promise.resolve({ data: [] as ContactRow[], error: null }),
     dealIds.length
       ? admin
-          .from("notes")
-          .select("*")
-          .in("deal_id", dealIds)
-          .order("created_at", { ascending: false })
+        .from("notes")
+        .select("*")
+        .in("deal_id", dealIds)
+        .order("created_at", { ascending: false })
       : Promise.resolve({ data: [] as NoteRow[], error: null }),
   ]);
 
@@ -597,7 +597,7 @@ export async function addNote(
     .single();
 
   throwIfError(error);
-  return toNoteItem(requireData(data, "Observacao criada sem retorno valido."));
+  return toNoteItem(requireData(data, "Observação criada sem retorno válido."));
 }
 
 export async function saveStages(companyId: string, drafts: StageDraftSchema[]) {

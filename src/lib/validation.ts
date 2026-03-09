@@ -46,8 +46,8 @@ export const noteSchema = z.object({
   body: z
     .string()
     .trim()
-    .min(1, "Escreva uma observacao.")
-    .max(1000, "Use no maximo 1000 caracteres."),
+    .min(1, "Escreva uma observação.")
+    .max(1000, "Use no máximo 1000 caracteres."),
 });
 
 export const changePasswordSchema = z

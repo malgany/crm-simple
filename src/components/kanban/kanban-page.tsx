@@ -378,10 +378,10 @@ export function KanbanPage({
         appendNoteToCard(current, dealId, response.note),
       );
       pendingRefreshRef.current = true;
-      toast.success("Observacao registrada.");
+      toast.success("Observação registrada.");
       return true;
     } catch (error) {
-      toast.error(getErrorMessage(error, "Não foi possível registrar a observacao."));
+      toast.error(getErrorMessage(error, "Não foi possível registrar a observação."));
       return false;
     } finally {
       endMutation();
@@ -554,7 +554,7 @@ export function KanbanPage({
   ];
 
   return (
-    <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
+    <main className="flex h-[100dvh] flex-col px-4 py-5 md:px-8 md:py-6">
       <AppHeader
         companyName={viewer.companyName}
         menuItems={menuItems}
@@ -628,7 +628,7 @@ export function KanbanPage({
           setDragDealId(dealId ?? null);
         }}
       >
-        <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+        <div className="custom-scrollbar mt-6 flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
           {filteredStages.map((stage) => (
             <StageColumn
               key={stage.id}

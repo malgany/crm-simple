@@ -467,12 +467,18 @@ export function CompanyUsersPage({
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
-                  style={{ background: "var(--subtle-surface)" }}
-                >
-                  {user.status === "active" ? "Ativo" : "Inativo"}
-                </span>
+                {user.status === "active" ? (
+                  <span className="rounded-full bg-[var(--primary)]/15 px-3 py-1 text-xs font-semibold text-[var(--primary)]">
+                    Ativo
+                  </span>
+                ) : (
+                  <span
+                    className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+                    style={{ background: "var(--subtle-surface)" }}
+                  >
+                    Inativo
+                  </span>
+                )}
                 <Button
                   className="hover:border-slate-300 hover:bg-[var(--subtle-surface)]"
                   onClick={() => setEditingUser(buildEditForm(user))}

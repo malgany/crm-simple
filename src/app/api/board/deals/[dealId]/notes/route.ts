@@ -29,6 +29,6 @@ export async function POST(request: Request, { params }: RouteContext) {
       note,
     });
   } catch (error) {
-    return jsonError(error, "Não foi possível registrar a observacao.");
+    return jsonError(error, "Não foi possível registrar a observação.");
   }
 }

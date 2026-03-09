@@ -412,9 +412,9 @@ export function MemberManagementPage({
                     setEditingUser((current) =>
                       current
                         ? {
-                            ...current,
-                            status: event.target.value as "active" | "inactive",
-                          }
+                          ...current,
+                          status: event.target.value as "active" | "inactive",
+                        }
                         : current,
                     )
                   }
@@ -464,7 +464,7 @@ export function MemberManagementPage({
                 </Button>
                 <Button disabled={isSavingEdit} type="submit">
                   {isSavingEdit ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-                  Salvar alteracoes
+                  Salvar alterações
                 </Button>
               </div>
             </form>
