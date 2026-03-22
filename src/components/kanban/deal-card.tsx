@@ -18,6 +18,9 @@ import type { KanbanCard } from "@/lib/app.types";
 
 type DealCardProps = {
   card: KanbanCard;
+  contextLabel?: string | null;
+  draggable?: boolean;
+  className?: string;
   onOpenDetails: (dealId: string) => void;
   stageId: string;
 };
@@ -51,6 +54,9 @@ function QuickAction({
 
 export function DealCard({
   card,
+  contextLabel,
+  draggable = true,
+  className,
   onOpenDetails,
   stageId,
 }: DealCardProps) {
@@ -60,6 +66,7 @@ export function DealCard({
         dealId: card.id,
         stageId,
       },
+      disabled: !draggable,
       id: card.id,
     });
   const { "aria-describedby": _ariaDescription, ...draggableAttributes } =
@@ -81,6 +88,7 @@ export function DealCard({
       className={cn(
         "surface-shadow cursor-pointer rounded-[1.5rem] border border-white/70 p-4 transition-transform hover:-translate-y-0.5",
         isDragging && "pointer-events-none opacity-0",
+        className,
       )}
       onClick={() => onOpenDetails(card.id)}
       ref={setNodeRef}
@@ -95,18 +103,25 @@ export function DealCard({
             {formatPhone(card.contact.phone)}
           </p>
         </div>
-        <button
-          aria-label="Arrastar card"
-          className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
-          onClick={(event) => event.stopPropagation()}
-          type="button"
-          {...draggableAttributes}
-          {...listeners}
-        >
-          <GripVertical className="h-4 w-4" />
-        </button>
+        {draggable ? (
+          <button
+            aria-label="Arrastar card"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+            onClick={(event) => event.stopPropagation()}
+            type="button"
+            {...draggableAttributes}
+            {...listeners}
+          >
+            <GripVertical className="h-4 w-4" />
+          </button>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {contextLabel ? (
+          <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
+            {contextLabel}
+          </span>
+        ) : null}
         {card.contact.origin ? (
           <span className="inline-flex rounded-full bg-[var(--secondary)] px-3 py-1 text-xs font-semibold text-[var(--secondary-foreground)]">
             {card.contact.origin}

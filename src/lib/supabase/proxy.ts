@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 import { getSupabaseEnv } from "@/lib/env";
+import {
+  getAuthErrorMessage,
+  isExpectedNoSessionAuthError,
+  isSupabaseAuthCookie,
+} from "@/lib/supabase/auth-errors";
 
 const protectedPrefixes = ["/admin", "/negociacoes", "/usuarios", "/acesso-bloqueado"];
 const authRedirectPaths = new Set(["/login", "/cadastro"]);
@@ -10,6 +15,21 @@ function isProtectedPath(pathname: string) {
   return protectedPrefixes.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
+}
+
+function clearInvalidAuthCookies(request: NextRequest, response: NextResponse) {
+  for (const { name } of request.cookies.getAll()) {
+    if (!isSupabaseAuthCookie(name)) {
+      continue;
+    }
+
+    request.cookies.delete(name);
+    response.cookies.set(name, "", {
+      expires: new Date(0),
+      maxAge: 0,
+      path: "/",
+    });
+  }
 }
 
 export async function updateSession(request: NextRequest) {
@@ -33,9 +53,22 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
+  let user = null;
   const {
-    data: { user },
+    data,
+    error,
   } = await supabase.auth.getUser();
+  user = data.user;
+
+  if (error) {
+    if (isExpectedNoSessionAuthError(error)) {
+      clearInvalidAuthCookies(request, response);
+      user = null;
+    } else {
+      console.error("Auth error in updateSession:", getAuthErrorMessage(error));
+    }
+  }
+
   const pathname = request.nextUrl.pathname;
 
   if (!user && isProtectedPath(pathname)) {

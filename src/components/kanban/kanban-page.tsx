@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { AppHeader } from "@/components/layout/app-header";
 import { useTheme } from "@/components/theme/theme-provider";
 import { ContactDialog } from "@/components/kanban/contact-dialog";
+import { DealCard } from "@/components/kanban/deal-card";
 import {
   ManageStagesDialog,
   type StageDraft,
@@ -58,6 +59,13 @@ import { getErrorMessage, normalizeOptionalText, normalizePhone } from "@/lib/ut
 
 const AUTO_REFRESH_MS = 15000;
 
+type MobileStageFilter = string | "all";
+
+type MobileDealListItem = {
+  card: KanbanCard;
+  stageName: string;
+};
+
 type KanbanPageProps = {
   canManageStages: boolean;
   canManageUsers: boolean;
@@ -82,6 +90,14 @@ function findCard(stages: Stage[], dealId: string | null) {
   return null;
 }
 
+function findStage(stages: Stage[], stageId: string | null) {
+  if (!stageId) {
+    return null;
+  }
+
+  return stages.find((stage) => stage.id === stageId) ?? null;
+}
+
 export function KanbanPage({
   canManageStages,
   canManageUsers,
@@ -92,6 +108,7 @@ export function KanbanPage({
   const router = useRouter();
   const { toggleTheme } = useTheme();
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
+  const [mobileStageId, setMobileStageId] = useState(() => initialStages[0]?.id ?? "");
   const [searchDraft, setSearchDraft] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
@@ -101,12 +118,50 @@ export function KanbanPage({
   const [manageStagesOpen, setManageStagesOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const deferredSearch = useDeferredValue(searchQuery);
-  const filteredStages = filterStages(stages, deferredSearch);
+  const filteredStages = useMemo(
+    () => filterStages(stages, deferredSearch),
+    [deferredSearch, stages],
+  );
+  const hasSearchQuery = deferredSearch.trim().length > 0;
   const filteredCardCount = useMemo(
     () =>
       filteredStages.reduce((total, stage) => total + stage.cards.length, 0),
     [filteredStages],
   );
+  const activeMobileStage = findStage(stages, mobileStageId);
+  const activeMobileStageFilter: MobileStageFilter = hasSearchQuery ? "all" : mobileStageId;
+  const mobileStageTabs = useMemo(
+    () =>
+      hasSearchQuery
+        ? [{ count: filteredCardCount, id: "all" as const, label: "Todas" }]
+        : stages.map((stage) => ({
+          count: stage.cards.length,
+          id: stage.id,
+          label: stage.name,
+        })),
+    [filteredCardCount, hasSearchQuery, stages],
+  );
+  const mobileDealList = useMemo<MobileDealListItem[]>(() => {
+    if (activeMobileStageFilter === "all") {
+      return filteredStages.flatMap((stage) =>
+        stage.cards.map((card) => ({
+          card,
+          stageName: stage.name,
+        })),
+      );
+    }
+
+    const stage = activeMobileStage ?? stages[0] ?? null;
+
+    if (!stage) {
+      return [];
+    }
+
+    return stage.cards.map((card) => ({
+      card,
+      stageName: stage.name,
+    }));
+  }, [activeMobileStage, activeMobileStageFilter, filteredStages, stages]);
   const selectedCard = findCard(stages, selectedDealId);
   const activeDragCard = findCard(stages, dragDealId);
   const mountedRef = useRef(true);
@@ -209,6 +264,34 @@ export function KanbanPage({
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!stages.length) {
+      if (mobileStageId) {
+        setMobileStageId("");
+      }
+      return;
+    }
+
+    if (!findStage(stages, mobileStageId)) {
+      setMobileStageId(stages[0]?.id ?? "");
+    }
+  }, [mobileStageId, stages]);
+
+  useEffect(() => {
+    const trimmedDraft = searchDraft.trim();
+
+    if (!trimmedDraft) {
+      setSearchQuery("");
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSearchQuery(searchDraft);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchDraft]);
 
   useEffect(() => {
     dragDealIdRef.current = dragDealId;
@@ -493,7 +576,7 @@ export function KanbanPage({
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSearchQuery(searchDraft);
+    setSearchQuery(searchDraft.trim() ? searchDraft : "");
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -524,6 +607,11 @@ export function KanbanPage({
     : viewer.role === "admin"
       ? "Admin"
       : "Usuário";
+  const activeSearchLabel = deferredSearch.trim();
+  const activeMobileStageName =
+    activeMobileStageFilter === "all"
+      ? "Todas"
+      : activeMobileStage?.name ?? "Etapa";
   const menuItems = [
     ...(viewer.isSuperadmin || canManageUsers
       ? [{
@@ -581,7 +669,7 @@ export function KanbanPage({
               variant="secondary"
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Novo contato</span>
+              <span>Novo contato</span>
             </Button>
             {canManageStages ? (
               <Button
@@ -599,25 +687,82 @@ export function KanbanPage({
             <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
             <Input
               className="h-11 w-full rounded-full pl-11"
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                setSearchDraft(nextValue);
-
-                if (!nextValue.trim()) {
-                  setSearchQuery("");
-                }
-              }}
-              placeholder="Buscar por nome ou telefone (Enter)"
+              onChange={(event) => setSearchDraft(event.target.value)}
+              placeholder="Buscar por nome ou telefone"
               value={searchDraft}
             />
           </div>
         </form>
-        {searchQuery.trim() ? (
+        {activeSearchLabel ? (
           <p className="mt-3 text-sm text-[var(--muted-foreground)]">
             {filteredCardCount} resultado{filteredCardCount === 1 ? "" : "s"} para{" "}
-            <span className="font-semibold text-[var(--foreground)]">{searchQuery.trim()}</span>
+            <span className="font-semibold text-[var(--foreground)]">{activeSearchLabel}</span>
           </p>
         ) : null}
+      </section>
+
+      <section className="mt-6 flex min-h-0 flex-1 flex-col md:hidden">
+        <div
+          className="surface-shadow rounded-[1.5rem] border border-white/60 p-3"
+          style={{ background: "var(--panel-surface)" }}
+        >
+          <div className="flex flex-wrap gap-2">
+            {mobileStageTabs.map((tab) => {
+              const isActive = tab.id === activeMobileStageFilter;
+
+              return (
+                <Button
+                  className="rounded-full px-4"
+                  key={tab.id}
+                  onClick={() => {
+                    if (tab.id !== "all") {
+                      setMobileStageId(tab.id);
+                    }
+                  }}
+                  size="sm"
+                  type="button"
+                  variant={isActive ? "secondary" : "outline"}
+                >
+                  <span>{tab.label}</span>
+                  <span
+                    className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                    style={{ background: "var(--subtle-surface)" }}
+                  >
+                    {tab.count}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+          <p className="mt-3 text-sm text-[var(--muted-foreground)]">
+            {mobileDealList.length} card{mobileDealList.length === 1 ? "" : "s"} em{" "}
+            <span className="font-semibold text-[var(--foreground)]">{activeMobileStageName}</span>
+          </p>
+        </div>
+
+        <div className="custom-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-4">
+          {mobileDealList.length ? (
+            mobileDealList.map(({ card, stageName }) => (
+              <DealCard
+                card={card}
+                contextLabel={activeMobileStageFilter === "all" ? stageName : null}
+                draggable={false}
+                key={card.id}
+                onOpenDetails={(dealId) => openDeal(dealId, "details")}
+                stageId={card.stageId}
+              />
+            ))
+          ) : (
+            <div
+              className="surface-shadow flex min-h-52 flex-1 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
+              style={{ background: "var(--panel-surface)" }}
+            >
+              {activeMobileStageFilter === "all"
+                ? "Nenhum resultado para a busca atual."
+                : `Nenhum card na etapa ${activeMobileStageName}.`}
+            </div>
+          )}
+        </div>
       </section>
 
       <DndContext
@@ -628,7 +773,7 @@ export function KanbanPage({
           setDragDealId(dealId ?? null);
         }}
       >
-        <div className="custom-scrollbar mt-6 flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
+        <div className="custom-scrollbar mt-6 hidden min-h-0 flex-1 gap-4 overflow-x-auto pb-4 md:flex">
           {filteredStages.map((stage) => (
             <StageColumn
               key={stage.id}
@@ -689,4 +834,3 @@ export function KanbanPage({
     </main>
   );
 }
-

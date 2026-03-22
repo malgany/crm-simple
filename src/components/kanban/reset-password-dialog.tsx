@@ -90,7 +90,17 @@ export function ResetPasswordDialog({
             Informe a senha atual e confirme a nova senha para concluir a troca.
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-5" onSubmit={onSubmit}>
+        <form autoComplete="on" className="space-y-5" onSubmit={onSubmit}>
+          <input
+            aria-hidden="true"
+            autoComplete="username"
+            className="sr-only"
+            name="username"
+            readOnly
+            tabIndex={-1}
+            type="email"
+            value={userEmail}
+          />
           <div className="space-y-2">
             <Label htmlFor="current-password">Senha atual</Label>
             <div className="relative">
@@ -101,6 +111,7 @@ export function ResetPasswordDialog({
                 id="current-password"
                 type="password"
                 {...form.register("currentPassword")}
+                name="current-password"
               />
             </div>
             <p className="text-sm text-[var(--danger)]">
@@ -117,6 +128,7 @@ export function ResetPasswordDialog({
                 id="new-password"
                 type="password"
                 {...form.register("password")}
+                name="new-password"
               />
             </div>
             <p className="text-sm text-[var(--danger)]">
@@ -133,6 +145,7 @@ export function ResetPasswordDialog({
                 id="confirm-new-password"
                 type="password"
                 {...form.register("confirmPassword")}
+                name="confirm-new-password"
               />
             </div>
             <p className="text-sm text-[var(--danger)]">

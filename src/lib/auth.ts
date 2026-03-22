@@ -4,6 +4,7 @@ import type { CompanySummary, ViewerSession } from "@/lib/app.types";
 import type { TableRow } from "@/lib/database.types";
 import { getAppEnv } from "@/lib/env";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { getAuthErrorMessage, isExpectedNoSessionAuthError } from "@/lib/supabase/auth-errors";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type MembershipRow = TableRow<"company_users">;
@@ -117,7 +118,11 @@ export async function getAppContext(options?: {
   } = await supabase.auth.getUser();
 
   if (error) {
-    console.error("Auth error in getAppContext:", error.message);
+    if (isExpectedNoSessionAuthError(error)) {
+      return null;
+    }
+
+    console.error("Auth error in getAppContext:", getAuthErrorMessage(error));
     return null;
   }
 
