@@ -501,15 +501,20 @@ export async function deleteContact(companyId: string, dealId: string) {
   throwIfError(error);
 }
 
-export async function moveDeal(companyId: string, dealId: string, stageId: string) {
+export async function moveDeal(
+  companyId: string,
+  dealId: string,
+  stageId: string,
+  movedAt?: string,
+) {
   const admin = getAdminClient();
   await loadCompanyStage(companyId, stageId);
-  const movedAt = new Date().toISOString();
+  const nextMovedAt = movedAt?.trim() || new Date().toISOString();
 
   const { data, error } = await admin
     .from("deals")
     .update({
-      moved_at: movedAt,
+      moved_at: nextMovedAt,
       stage_id: stageId,
     })
     .eq("company_id", companyId)

@@ -14,11 +14,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ResetPasswordDialog } from "@/components/kanban/reset-password-dialog";
 import { AppHeader } from "@/components/layout/app-header";
 import { useTheme } from "@/components/theme/theme-provider";
-import { ResetPasswordDialog } from "@/components/kanban/reset-password-dialog";
-import type { UserManagementItem } from "@/lib/app.types";
-import { requestApi } from "@/lib/client-api";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +28,8 @@ import {
 import { FormAutofillGuard } from "@/components/ui/form-autofill-guard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { UserManagementItem } from "@/lib/app.types";
+import { requestApi } from "@/lib/client-api";
 
 type MemberManagementPageProps = {
   companyId: string;
@@ -61,6 +61,9 @@ const emptyCreateForm: CreateMemberForm = {
   name: "",
   password: "",
 };
+
+const selectClassName =
+  "flex h-11 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-shadow focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
 
 function buildEditForm(user: UserManagementItem): EditMemberForm {
   return {
@@ -197,8 +200,11 @@ export function MemberManagementPage({
   };
 
   return (
-    <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
+    <main className="min-h-screen" style={{ background: "var(--management-background)" }}>
       <AppHeader
+        accountEmail={userEmail}
+        accountName={viewerName}
+        className="rounded-none border-x-0 border-t-0 px-4 md:px-8"
         companyName={companyName}
         menuItems={[
           {
@@ -217,249 +223,275 @@ export function MemberManagementPage({
             onSelect: () => setResetPasswordOpen(true),
           },
         ]}
-        roleLabel={viewerName}
+        roleLabel="Admin"
       />
 
-      <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestão de usuários</h1>
-      </section>
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+        <section className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+            Administração
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)]">
+            Gestão de usuários
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">
+            Crie acessos, ajuste dados e controle quais usuários da empresa continuam ativos.
+          </p>
+        </section>
 
-      <section
-        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
-        style={{ background: "var(--panel-surface)" }}
-      >
-        <div className="mb-4 flex items-center gap-2">
-          <Plus className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuário</h2>
-        </div>
-        <form
-          autoComplete="off"
-          className="grid gap-4 md:grid-cols-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void submitCreate();
-          }}
+        <section
+          className="surface-shadow mt-6 overflow-hidden rounded-[0.75rem] border border-[var(--border)]"
+          style={{ background: "var(--panel-surface)" }}
         >
-          <FormAutofillGuard />
-          <div className="space-y-2">
-            <Label htmlFor="member-name">Nome</Label>
-            <Input
-              id="member-name"
-              onChange={(event) =>
-                setCreateForm((current) => ({ ...current, name: event.target.value }))
-              }
-              value={createForm.name}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="member-email">E-mail</Label>
-            <Input
-              autoComplete="off"
-              id="member-email"
-              name="member-email"
-              onChange={(event) =>
-                setCreateForm((current) => ({ ...current, email: event.target.value }))
-              }
-              value={createForm.email}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="member-password">Senha</Label>
-            <Input
-              autoComplete="new-password"
-              id="member-password"
-              name="member-password"
-              onChange={(event) =>
-                setCreateForm((current) => ({ ...current, password: event.target.value }))
-              }
-              type="password"
-              value={createForm.password}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="member-password-confirm">Confirmar senha</Label>
-            <Input
-              autoComplete="new-password"
-              id="member-password-confirm"
-              name="member-password-confirm"
-              onChange={(event) =>
-                setCreateForm((current) => ({
-                  ...current,
-                  confirmPassword: event.target.value,
-                }))
-              }
-              type="password"
-              value={createForm.confirmPassword}
-            />
-          </div>
-          <div className="md:col-span-2 mt-4 flex justify-end">
-            <Button disabled={isCreating} type="submit">
-              {isCreating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Criar usuário
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      <section className="mt-4 space-y-3">
-        {users.map((user) => (
-          <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
-            key={user.id}
-            style={{ background: "var(--panel-surface)" }}
+          <div
+            className="border-b border-[var(--border)] px-5 py-5 md:px-6"
+            style={{ background: "var(--panel-accent-surface)" }}
           >
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-base font-semibold text-[var(--foreground)]">{user.name}</p>
-                <p className="text-sm text-[var(--muted-foreground)]">{user.email}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
-                  style={{ background: "var(--subtle-surface)" }}
-                >
-                  {user.status === "active" ? "Ativo" : "Inativo"}
-                </span>
-                <Button
-                  className="hover:border-slate-300 hover:bg-[var(--subtle-surface)]"
-                  onClick={() => setEditingUser(buildEditForm(user))}
-                  type="button"
-                  variant="outline"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Editar
-                </Button>
-                <Button
-                  className="hover:border-slate-300 hover:bg-[var(--subtle-surface)]"
-                  onClick={() => toggleStatus(user)}
-                  type="button"
-                  variant="outline"
-                >
-                  <UserX className="h-4 w-4" />
-                  {user.status === "active" ? "Inativar" : "Reativar"}
-                </Button>
-                <Button
-                  className="hover:bg-[var(--subtle-surface)]"
-                  onClick={() => deleteUser(user)}
-                  type="button"
-                  variant="ghost"
-                >
-                  <Trash2 className="h-4 w-4 text-[var(--danger)]" />
-                  Excluir
-                </Button>
-              </div>
+            <div className="flex items-center gap-2">
+              <Plus className="h-4 w-4 text-[var(--primary)]" />
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuário</h2>
             </div>
-          </article>
-        ))}
-      </section>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Cadastre um novo membro com nome, e-mail e senha inicial.
+            </p>
+          </div>
 
-      <div className="mt-4 flex justify-start">
-        <Button asChild type="button" variant="outline">
-          <Link href="/negociacoes">Voltar ao Kanban</Link>
-        </Button>
+          <form
+            autoComplete="off"
+            className="grid gap-4 px-5 py-5 md:grid-cols-2 md:px-6 md:py-6"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitCreate();
+            }}
+          >
+            <FormAutofillGuard />
+            <div className="space-y-2">
+              <Label htmlFor="member-name">Nome</Label>
+              <Input
+                id="member-name"
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, name: event.target.value }))
+                }
+                value={createForm.name}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="member-email">E-mail</Label>
+              <Input
+                autoComplete="off"
+                id="member-email"
+                name="member-email"
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, email: event.target.value }))
+                }
+                value={createForm.email}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="member-password">Senha</Label>
+              <Input
+                autoComplete="new-password"
+                id="member-password"
+                name="member-password"
+                onChange={(event) =>
+                  setCreateForm((current) => ({ ...current, password: event.target.value }))
+                }
+                type="password"
+                value={createForm.password}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="member-password-confirm">Confirmar senha</Label>
+              <Input
+                autoComplete="new-password"
+                id="member-password-confirm"
+                name="member-password-confirm"
+                onChange={(event) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                type="password"
+                value={createForm.confirmPassword}
+              />
+            </div>
+            <div className="md:col-span-2 flex justify-end pt-2">
+              <Button disabled={isCreating} type="submit">
+                {isCreating ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                Criar usuário
+              </Button>
+            </div>
+          </form>
+        </section>
+
+        <section className="mt-6 space-y-3">
+          {users.map((user) => (
+            <article
+              className="surface-shadow rounded-[0.75rem] border border-[var(--border)] p-4 md:p-5"
+              key={user.id}
+              style={{ background: "var(--panel-surface)" }}
+            >
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="space-y-1">
+                  <p className="text-base font-semibold text-[var(--foreground)]">{user.name}</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">{user.email}</p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span
+                    className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+                    style={{ background: "var(--subtle-surface)" }}
+                  >
+                    {user.status === "active" ? "Ativo" : "Inativo"}
+                  </span>
+                  <Button
+                    onClick={() => setEditingUser(buildEditForm(user))}
+                    type="button"
+                    variant="outline"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar
+                  </Button>
+                  <Button
+                    onClick={() => toggleStatus(user)}
+                    type="button"
+                    variant="outline"
+                  >
+                    <UserX className="h-4 w-4" />
+                    {user.status === "active" ? "Inativar" : "Reativar"}
+                  </Button>
+                  <Button onClick={() => deleteUser(user)} type="button" variant="ghost">
+                    <Trash2 className="h-4 w-4 text-[var(--danger)]" />
+                    Excluir
+                  </Button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </section>
+
+        <div className="mt-6 flex justify-start">
+          <Button asChild type="button" variant="outline">
+            <Link href="/negociacoes">Voltar ao Kanban</Link>
+          </Button>
+        </div>
       </div>
 
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
-        <DialogContent>
+        <DialogContent className="w-[min(94vw,38rem)]">
           <DialogHeader>
             <DialogTitle>Editar usuário</DialogTitle>
             <DialogDescription>
-              Atualize dados do usuário ou altere o status de acesso.
+              Atualize os dados do usuário ou altere o status de acesso.
             </DialogDescription>
           </DialogHeader>
           {editingUser ? (
             <form
               autoComplete="off"
-              className="space-y-4"
+              className="space-y-5"
               onSubmit={(event) => {
                 event.preventDefault();
                 void saveEdit();
               }}
             >
               <FormAutofillGuard />
-              <div className="space-y-2">
-                <Label htmlFor="edit-member-name">Nome</Label>
-                <Input
-                  id="edit-member-name"
-                  onChange={(event) =>
-                    setEditingUser((current) =>
-                      current ? { ...current, name: event.target.value } : current,
-                    )
-                  }
-                  value={editingUser.name}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-member-email">E-mail</Label>
-                <Input
-                  autoComplete="off"
-                  id="edit-member-email"
-                  name="edit-member-email"
-                  onChange={(event) =>
-                    setEditingUser((current) =>
-                      current ? { ...current, email: event.target.value } : current,
-                    )
-                  }
-                  value={editingUser.email}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-member-status">Status</Label>
-                <select
-                  className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
-                  id="edit-member-status"
-                  onChange={(event) =>
-                    setEditingUser((current) =>
-                      current
-                        ? {
-                          ...current,
-                          status: event.target.value as "active" | "inactive",
-                        }
-                        : current,
-                    )
-                  }
-                  value={editingUser.status}
-                >
-                  <option value="active">Ativo</option>
-                  <option value="inactive">Inativo</option>
-                </select>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div
+                className="space-y-5 rounded-[0.75rem] border border-[var(--border)] p-4 md:p-5"
+                style={{ background: "var(--subtle-surface)" }}
+              >
                 <div className="space-y-2">
-                  <Label htmlFor="edit-member-password">Nova senha</Label>
+                  <Label htmlFor="edit-member-name">Nome</Label>
                   <Input
-                    autoComplete="new-password"
-                    id="edit-member-password"
-                    name="edit-member-password"
+                    id="edit-member-name"
                     onChange={(event) =>
                       setEditingUser((current) =>
-                        current ? { ...current, password: event.target.value } : current,
+                        current ? { ...current, name: event.target.value } : current,
                       )
                     }
-                    type="password"
-                    value={editingUser.password}
+                    value={editingUser.name}
                   />
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="edit-member-confirm">Confirmar senha</Label>
+                  <Label htmlFor="edit-member-email">E-mail</Label>
                   <Input
-                    autoComplete="new-password"
-                    id="edit-member-confirm"
-                    name="edit-member-confirm"
+                    autoComplete="off"
+                    id="edit-member-email"
+                    name="edit-member-email"
+                    onChange={(event) =>
+                      setEditingUser((current) =>
+                        current ? { ...current, email: event.target.value } : current,
+                      )
+                    }
+                    value={editingUser.email}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="edit-member-status">Status</Label>
+                  <select
+                    className={selectClassName}
+                    id="edit-member-status"
                     onChange={(event) =>
                       setEditingUser((current) =>
                         current
-                          ? { ...current, confirmPassword: event.target.value }
+                          ? {
+                              ...current,
+                              status: event.target.value as "active" | "inactive",
+                            }
                           : current,
                       )
                     }
-                    type="password"
-                    value={editingUser.confirmPassword}
-                  />
+                    value={editingUser.status}
+                  >
+                    <option value="active">Ativo</option>
+                    <option value="inactive">Inativo</option>
+                  </select>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-member-password">Nova senha</Label>
+                    <Input
+                      autoComplete="new-password"
+                      id="edit-member-password"
+                      name="edit-member-password"
+                      onChange={(event) =>
+                        setEditingUser((current) =>
+                          current ? { ...current, password: event.target.value } : current,
+                        )
+                      }
+                      type="password"
+                      value={editingUser.password}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-member-confirm">Confirmar senha</Label>
+                    <Input
+                      autoComplete="new-password"
+                      id="edit-member-confirm"
+                      name="edit-member-confirm"
+                      onChange={(event) =>
+                        setEditingUser((current) =>
+                          current
+                            ? { ...current, confirmPassword: event.target.value }
+                            : current,
+                        )
+                      }
+                      type="password"
+                      value={editingUser.confirmPassword}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3">
-                <Button onClick={() => setEditingUser(null)} type="button" variant="ghost">
+
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <Button onClick={() => setEditingUser(null)} type="button" variant="outline">
                   Cancelar
                 </Button>
                 <Button disabled={isSavingEdit} type="submit">

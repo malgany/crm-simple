@@ -75,6 +75,7 @@ export type ContactFormInput = {
 
 export type MoveDealInput = {
   dealId: string;
+  movedAt?: string;
   stageId: string;
 };
 

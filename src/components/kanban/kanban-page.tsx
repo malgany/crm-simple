@@ -1,6 +1,16 @@
 "use client";
 
-import { DndContext, DragOverlay, closestCorners, type DragEndEvent } from "@dnd-kit/core";
+import {
+  type CollisionDetection,
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCorners,
+  pointerWithin,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import {
   LockKeyhole,
   Plus,
@@ -50,7 +60,12 @@ import {
   mergeStageStructure,
   moveCardLocally,
   prependCard,
+  repositionCardLocally,
   removeCard,
+  reorderCardWithinStage,
+  resolveInitialContactStageId,
+  resolveMovedAtForCardPosition,
+  updateCardMovedAt,
   updateCardAssignment,
   updateCardContact,
 } from "@/lib/kanban";
@@ -98,6 +113,20 @@ function findStage(stages: Stage[], stageId: string | null) {
   return stages.find((stage) => stage.id === stageId) ?? null;
 }
 
+function findStageByDealId(stages: Stage[], dealId: string | null) {
+  if (!dealId) {
+    return null;
+  }
+
+  return stages.find((stage) => stage.cards.some((card) => card.id === dealId)) ?? null;
+}
+
+const boardCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+
+  return pointerCollisions.length > 0 ? pointerCollisions : closestCorners(args);
+};
+
 export function KanbanPage({
   canManageStages,
   canManageUsers,
@@ -113,10 +142,21 @@ export function KanbanPage({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [dragDealId, setDragDealId] = useState<string | null>(null);
+  const [dragOverStageId, setDragOverStageId] = useState<string | null>(null);
   const [dialogFocus, setDialogFocus] = useState<"details" | "notes">("details");
   const [newContactOpen, setNewContactOpen] = useState(false);
+  const [preferredNewContactStageId, setPreferredNewContactStageId] = useState<string | null>(
+    () => initialStages[0]?.id ?? null,
+  );
   const [manageStagesOpen, setManageStagesOpen] = useState(false);
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 4,
+      },
+    }),
+  );
   const deferredSearch = useDeferredValue(searchQuery);
   const filteredStages = useMemo(
     () => filterStages(stages, deferredSearch),
@@ -165,6 +205,8 @@ export function KanbanPage({
   const selectedCard = findCard(stages, selectedDealId);
   const activeDragCard = findCard(stages, dragDealId);
   const mountedRef = useRef(true);
+  const dragSnapshotRef = useRef<Stage[] | null>(null);
+  const dragPreviewRef = useRef<Stage[] | null>(null);
   const dragDealIdRef = useRef<string | null>(null);
   const selectedDealIdRef = useRef<string | null>(null);
   const newContactOpenRef = useRef(false);
@@ -192,6 +234,21 @@ export function KanbanPage({
     if (!open) {
       setSelectedDealId(null);
       setDialogFocus("details");
+    }
+  };
+
+  const openNewContact = (preferredStageId?: string | null) => {
+    setPreferredNewContactStageId(
+      resolveInitialContactStageId(stages, preferredStageId),
+    );
+    setNewContactOpen(true);
+  };
+
+  const handleNewContactOpenChange = (open: boolean) => {
+    setNewContactOpen(open);
+
+    if (!open) {
+      setPreferredNewContactStageId(null);
     }
   };
 
@@ -330,10 +387,12 @@ export function KanbanPage({
     };
   }, [companyId]);
 
-  const handleMoveDeal = async ({ dealId, stageId }: MoveDealInput) => {
+  const handleMoveDeal = async ({ dealId, movedAt: requestedMovedAt, stageId }: MoveDealInput) => {
     const currentCard = findCard(stages, dealId);
+    const isSameStageReorder =
+      !!currentCard && currentCard.stageId === stageId && !!requestedMovedAt;
 
-    if (!currentCard || currentCard.stageId === stageId) {
+    if (!currentCard || (currentCard.stageId === stageId && !isSameStageReorder)) {
       return true;
     }
 
@@ -341,25 +400,35 @@ export function KanbanPage({
     beginMutation();
 
     try {
-      const movedAt = new Date().toISOString();
-      setStages((current) => moveCardLocally(current, dealId, stageId, movedAt));
+      const movedAt = requestedMovedAt ?? new Date().toISOString();
+
+      if (isSameStageReorder) {
+        setStages((current) => updateCardMovedAt(current, dealId, movedAt));
+      } else {
+        setStages((current) => moveCardLocally(current, dealId, stageId, movedAt));
+      }
 
       const response = await requestApi<{ moved: { movedAt: string; stageId: string } }>(
         `/api/board/deals/${dealId}/move`,
         {
-          body: JSON.stringify({ stageId }),
+          body: JSON.stringify({ movedAt: requestedMovedAt, stageId }),
           method: "PATCH",
         },
         companyId,
       );
-      setStages((current) =>
-        moveCardLocally(
-          current,
-          dealId,
-          response.moved.stageId,
-          response.moved.movedAt,
-        ),
-      );
+
+      if (isSameStageReorder) {
+        setStages((current) => updateCardMovedAt(current, dealId, response.moved.movedAt));
+      } else {
+        setStages((current) =>
+          moveCardLocally(
+            current,
+            dealId,
+            response.moved.stageId,
+            response.moved.movedAt,
+          ),
+        );
+      }
 
       pendingRefreshRef.current = true;
       toast.success("Card movido.");
@@ -580,23 +649,52 @@ export function KanbanPage({
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
-    setDragDealId(null);
-
-    if (!event.over) {
-      return;
-    }
-
-    const activeStageId = event.active.data.current?.stageId as string | undefined;
     const dealId = event.active.data.current?.dealId as string | undefined;
     const targetStageId =
-      (event.over.data.current?.stageId as string | undefined) ??
-      (typeof event.over.id === "string" ? event.over.id : undefined);
+      (event.over?.data.current?.stageId as string | undefined) ??
+      (typeof event.over?.id === "string" ? event.over.id : undefined);
+    const previewStages = dragPreviewRef.current ?? stages;
+    const currentStage = findStageByDealId(previewStages, dealId ?? null);
+    const currentStageId = currentStage?.id;
 
-    if (!dealId || !activeStageId || !targetStageId || activeStageId === targetStageId) {
+    setDragDealId(null);
+    setDragOverStageId(null);
+    const dragSnapshot = dragSnapshotRef.current;
+    dragSnapshotRef.current = null;
+    dragPreviewRef.current = null;
+
+    if (!event.over) {
+      if (dragSnapshot) {
+        setStages(dragSnapshot);
+      }
       return;
     }
 
-    await handleMoveDeal({ dealId, stageId: targetStageId });
+    if (!dealId || !currentStageId || !targetStageId) {
+      if (dragSnapshot) {
+        setStages(dragSnapshot);
+      }
+      return;
+    }
+
+    const previousStage = dragSnapshot
+      ? findStageByDealId(dragSnapshot, dealId)
+      : null;
+    const didStageChange = previousStage?.id !== currentStageId;
+    const didOrderChange =
+      !!previousStage &&
+      previousStage.cards.map((card) => card.id).join("|") !==
+        currentStage.cards.map((card) => card.id).join("|");
+
+    if (!didStageChange && !didOrderChange) {
+      if (dragSnapshot) {
+        setStages(dragSnapshot);
+      }
+      return;
+    }
+
+    const movedAt = resolveMovedAtForCardPosition(currentStage.cards, dealId);
+    await handleMoveDeal({ dealId, movedAt, stageId: currentStageId });
   };
 
   const usersPath = viewer.isSuperadmin
@@ -612,6 +710,10 @@ export function KanbanPage({
     activeMobileStageFilter === "all"
       ? "Todas"
       : activeMobileStage?.name ?? "Etapa";
+  const mobileNewContactStageId =
+    activeMobileStageFilter === "all"
+      ? resolveInitialContactStageId(stages, mobileStageId)
+      : resolveInitialContactStageId(stages, activeMobileStage?.id ?? mobileStageId);
   const menuItems = [
     ...(viewer.isSuperadmin || canManageUsers
       ? [{
@@ -640,168 +742,243 @@ export function KanbanPage({
       }]
       : []),
   ];
-
   return (
-    <main className="flex h-[100dvh] flex-col px-4 py-5 md:px-8 md:py-6">
+    <main
+      className="flex h-[100dvh] flex-col overflow-hidden"
+      style={{ background: "var(--board-background)" }}
+    >
       <AppHeader
+        accountEmail={viewer.email}
+        accountName={viewer.name}
+        centerContent={
+          <form className="min-w-0 w-full md:max-w-[14rem] lg:max-w-[16rem]" onSubmit={handleSearchSubmit}>
+            <div className="relative min-w-0">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+              <Input
+                className="h-8 w-full rounded-[0.55rem] border-[var(--border)] bg-transparent pl-9"
+                onChange={(event) => setSearchDraft(event.target.value)}
+                placeholder="Pesquisar"
+                value={searchDraft}
+              />
+            </div>
+          </form>
+        }
+        className="rounded-none border-x-0 border-t-0 px-4 md:px-8"
         companyName={viewer.companyName}
         menuItems={menuItems}
         roleLabel={roleLabel}
       />
 
-      <section className="mt-4 px-1">
-        <h1 className="text-2xl font-semibold text-[var(--foreground)]">Kanban</h1>
+      <section
+        className="surface-shadow border-x-0 border-t-0 border-[var(--border)] px-4 py-2 backdrop-blur-md md:h-12 md:px-8 md:py-0"
+        style={{ background: "var(--board-topbar-surface)" }}
+      >
+        <div className="flex flex-col gap-3 md:h-full md:flex-row md:items-center md:justify-between">
+          <h1 className="text-sm font-semibold tracking-[0.01em] text-[var(--foreground)]">
+            {viewer.companyName ?? "Kanban"}
+          </h1>
+
+          {canManageStages ? (
+            <Button
+              className="h-8 shrink-0 px-3 md:self-center"
+              onClick={() => setManageStagesOpen(true)}
+              type="button"
+              variant="outline"
+            >
+              <Settings2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Configurar etapas</span>
+            </Button>
+          ) : null}
+        </div>
       </section>
 
-      <section
-        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-4 md:p-5"
-        style={{ background: "var(--panel-accent-surface)" }}
-      >
-        <form
-          className="flex flex-col gap-3 lg:flex-row lg:items-center"
-          onSubmit={handleSearchSubmit}
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              className="shrink-0"
-              onClick={() => setNewContactOpen(true)}
-              type="button"
-              variant="secondary"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Novo contato</span>
-            </Button>
-            {canManageStages ? (
-              <Button
-                className="shrink-0"
-                onClick={() => setManageStagesOpen(true)}
-                type="button"
-                variant="outline"
-              >
-                <Settings2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Configurar etapas</span>
-              </Button>
-            ) : null}
-          </div>
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
-            <Input
-              className="h-11 w-full rounded-full pl-11"
-              onChange={(event) => setSearchDraft(event.target.value)}
-              placeholder="Buscar por nome ou telefone"
-              value={searchDraft}
-            />
-          </div>
-        </form>
+      <div className="flex min-h-0 flex-1 flex-col px-4 pb-5 pt-6 md:px-8 md:pb-6">
         {activeSearchLabel ? (
-          <p className="mt-3 text-sm text-[var(--muted-foreground)]">
+          <p className="mb-4 text-sm text-[var(--muted-foreground)]">
             {filteredCardCount} resultado{filteredCardCount === 1 ? "" : "s"} para{" "}
             <span className="font-semibold text-[var(--foreground)]">{activeSearchLabel}</span>
           </p>
         ) : null}
-      </section>
+        <section className="flex min-h-0 flex-1 flex-col md:hidden">
+          <div
+            className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-3"
+            style={{ background: "var(--panel-surface)" }}
+          >
+            <div className="flex flex-wrap gap-2">
+              {mobileStageTabs.map((tab) => {
+                const isActive = tab.id === activeMobileStageFilter;
 
-      <section className="mt-6 flex min-h-0 flex-1 flex-col md:hidden">
-        <div
-          className="surface-shadow rounded-[1.5rem] border border-white/60 p-3"
-          style={{ background: "var(--panel-surface)" }}
-        >
-          <div className="flex flex-wrap gap-2">
-            {mobileStageTabs.map((tab) => {
-              const isActive = tab.id === activeMobileStageFilter;
-
-              return (
-                <Button
-                  className="rounded-full px-4"
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id !== "all") {
-                      setMobileStageId(tab.id);
-                    }
-                  }}
-                  size="sm"
-                  type="button"
-                  variant={isActive ? "secondary" : "outline"}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                    style={{ background: "var(--subtle-surface)" }}
+                return (
+                  <Button
+                    className="rounded-[var(--radius-md)] px-4"
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.id !== "all") {
+                        setMobileStageId(tab.id);
+                      }
+                    }}
+                    size="sm"
+                    type="button"
+                    variant={isActive ? "secondary" : "outline"}
                   >
-                    {tab.count}
-                  </span>
-                </Button>
-              );
-            })}
+                    <span>{tab.label}</span>
+                    <span
+                      className="rounded-[var(--radius-md)] px-2 py-0.5 text-[11px] font-semibold"
+                      style={{ background: "var(--subtle-surface)" }}
+                    >
+                      {tab.count}
+                    </span>
+                  </Button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-sm text-[var(--muted-foreground)]">
+              {mobileDealList.length} card{mobileDealList.length === 1 ? "" : "s"} em{" "}
+              <span className="font-semibold text-[var(--foreground)]">{activeMobileStageName}</span>
+            </p>
           </div>
-          <p className="mt-3 text-sm text-[var(--muted-foreground)]">
-            {mobileDealList.length} card{mobileDealList.length === 1 ? "" : "s"} em{" "}
-            <span className="font-semibold text-[var(--foreground)]">{activeMobileStageName}</span>
-          </p>
-        </div>
 
-        <div className="custom-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-4">
-          {mobileDealList.length ? (
-            mobileDealList.map(({ card, stageName }) => (
-              <DealCard
-                card={card}
-                contextLabel={activeMobileStageFilter === "all" ? stageName : null}
-                draggable={false}
-                key={card.id}
+          <div className="custom-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-4">
+            {mobileDealList.length ? (
+              <>
+                {mobileDealList.map(({ card, stageName }) => (
+                  <DealCard
+                    card={card}
+                    contextLabel={activeMobileStageFilter === "all" ? stageName : null}
+                    draggable={false}
+                    key={card.id}
+                    onOpenDetails={(dealId) => openDeal(dealId, "details")}
+                    stageId={card.stageId}
+                  />
+                ))}
+                <button
+                  className="inline-flex cursor-pointer items-center gap-2 self-start rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                  onClick={() => openNewContact(mobileNewContactStageId)}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar contato
+                </button>
+              </>
+            ) : (
+              <>
+                <div
+                  className="surface-shadow flex min-h-52 flex-1 flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
+                  style={{ background: "var(--panel-surface)" }}
+                >
+                  {activeMobileStageFilter === "all"
+                    ? "Nenhum resultado para a busca atual."
+                    : `Nenhum card na etapa ${activeMobileStageName}.`}
+                </div>
+                <button
+                  className="inline-flex cursor-pointer items-center gap-2 self-start rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                  onClick={() => openNewContact(mobileNewContactStageId)}
+                  type="button"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar contato
+                </button>
+              </>
+            )}
+          </div>
+        </section>
+
+        <DndContext
+          collisionDetection={boardCollisionDetection}
+          sensors={sensors}
+          onDragCancel={() => {
+            if (dragSnapshotRef.current) {
+              setStages(dragSnapshotRef.current);
+              dragSnapshotRef.current = null;
+            }
+            dragPreviewRef.current = null;
+            setDragDealId(null);
+            setDragOverStageId(null);
+          }}
+          onDragEnd={handleDragEnd}
+          onDragOver={(event) => {
+            const activeDealId = event.active.data.current?.dealId as string | undefined;
+            const overDealId = event.over?.data.current?.dealId as string | undefined;
+            const overStageId =
+              (event.over?.data.current?.stageId as string | undefined) ??
+              (typeof event.over?.id === "string" ? event.over.id : null);
+            const overType = event.over?.data.current?.type as string | undefined;
+
+            setDragOverStageId(overStageId);
+
+            if (!activeDealId || !overStageId) {
+              return;
+            }
+
+            setStages((current) => {
+              const currentStage = findStageByDealId(current, activeDealId);
+
+              if (!currentStage) {
+                return current;
+              }
+
+              let nextStages = current;
+
+              if (overType === "card" && overDealId && activeDealId !== overDealId) {
+                nextStages =
+                  currentStage.id === overStageId
+                    ? reorderCardWithinStage(current, currentStage.id, activeDealId, overDealId)
+                    : repositionCardLocally(current, activeDealId, overStageId, overDealId);
+              } else if (currentStage.id !== overStageId) {
+                nextStages = repositionCardLocally(current, activeDealId, overStageId);
+              }
+
+              dragPreviewRef.current = nextStages;
+              return nextStages;
+            });
+          }}
+          onDragStart={(event) => {
+            const dealId = event.active.data.current?.dealId as string | undefined;
+            const stageId =
+              (event.active.data.current?.stageId as string | undefined) ??
+              findCard(stages, dealId ?? null)?.stageId ??
+              null;
+            dragSnapshotRef.current = stages;
+            dragPreviewRef.current = stages;
+            setDragDealId(dealId ?? null);
+            setDragOverStageId(stageId);
+          }}
+        >
+          <div className="custom-scrollbar hidden min-h-0 flex-1 items-start gap-4 overflow-x-auto overflow-y-hidden pb-4 md:flex">
+            {filteredStages.map((stage) => (
+              <StageColumn
+                isDragHighlighted={
+                  dragOverStageId
+                    ? dragOverStageId === stage.id
+                    : !!dragDealId && stage.cards.some((card) => card.id === dragDealId)
+                }
+                key={stage.id}
+                onAddContact={openNewContact}
                 onOpenDetails={(dealId) => openDeal(dealId, "details")}
-                stageId={card.stageId}
+                stage={stage}
               />
-            ))
-          ) : (
-            <div
-              className="surface-shadow flex min-h-52 flex-1 flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
-              style={{ background: "var(--panel-surface)" }}
-            >
-              {activeMobileStageFilter === "all"
-                ? "Nenhum resultado para a busca atual."
-                : `Nenhum card na etapa ${activeMobileStageName}.`}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <DndContext
-        collisionDetection={closestCorners}
-        onDragEnd={handleDragEnd}
-        onDragStart={(event) => {
-          const dealId = event.active.data.current?.dealId as string | undefined;
-          setDragDealId(dealId ?? null);
-        }}
-      >
-        <div className="custom-scrollbar mt-6 hidden min-h-0 flex-1 gap-4 overflow-x-auto pb-4 md:flex">
-          {filteredStages.map((stage) => (
-            <StageColumn
-              key={stage.id}
-              onOpenDetails={(dealId) => openDeal(dealId, "details")}
-              stage={stage}
-            />
-          ))}
-        </div>
-        <DragOverlay zIndex={2000}>
-          {activeDragCard ? (
-            <div
-              className="surface-shadow pointer-events-none w-[19rem] rounded-[1.5rem] border border-[var(--primary)] p-4"
-              style={{ background: "var(--card)" }}
-            >
-              <p className="text-sm font-semibold text-[var(--foreground)]">
-                {activeDragCard.contact.name}
-              </p>
-              <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                {activeDragCard.contact.phone}
-              </p>
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            ))}
+          </div>
+          <DragOverlay zIndex={2000}>
+            {activeDragCard ? (
+              <div className="pointer-events-none w-[18rem]">
+                <DealCard
+                  card={activeDragCard}
+                  className="animate-[kanban-card-tilt_160ms_ease-out_forwards] rotate-[5deg]"
+                  draggable={false}
+                  onOpenDetails={() => undefined}
+                  stageId={activeDragCard.stageId}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
 
       <NewContactDialog
+        initialStageId={preferredNewContactStageId}
         onCreate={handleCreateContact}
-        onOpenChange={setNewContactOpen}
+        onOpenChange={handleNewContactOpenChange}
         open={newContactOpen}
         stages={stages}
       />

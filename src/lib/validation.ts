@@ -62,6 +62,7 @@ export const changePasswordSchema = z
   });
 
 export const moveDealSchema = z.object({
+  movedAt: z.string().optional(),
   dealId: z.string().uuid("Deal inválido."),
   stageId: z.string().uuid("Etapa inválida."),
 });

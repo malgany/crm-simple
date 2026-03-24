@@ -37,6 +37,9 @@ function reindexDrafts(drafts: StageDraft[]) {
   }));
 }
 
+const boardPrimaryButtonClass =
+  "border-transparent bg-[#669DF1] text-[#091218] hover:bg-[#7ba9f3] hover:shadow-[0_10px_24px_-18px_rgba(102,157,241,0.95)]";
+
 export function ManageStagesDialog({
   onOpenChange,
   onSave,
@@ -131,7 +134,7 @@ export function ManageStagesDialog({
         <div className="space-y-4">
           {drafts.map((draft, index) => (
             <div
-              className="rounded-[1.5rem] border border-[var(--border)] p-4"
+              className="rounded-[var(--radius-lg)] border border-[var(--border)] p-4"
               key={draft.id}
               style={{ background: "var(--subtle-surface)" }}
             >
@@ -215,7 +218,12 @@ export function ManageStagesDialog({
             <Button onClick={() => onOpenChange(false)} type="button" variant="ghost">
               Cancelar
             </Button>
-            <Button disabled={isSaving} onClick={handleSave} type="button">
+            <Button
+              className={boardPrimaryButtonClass}
+              disabled={isSaving}
+              onClick={handleSave}
+              type="button"
+            >
               {isSaving ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
               Salvar alterações
             </Button>

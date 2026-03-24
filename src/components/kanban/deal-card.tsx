@@ -1,8 +1,8 @@
 "use client";
 
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
-  GripVertical,
   Mail,
   MessageCircleMore,
   Phone,
@@ -41,9 +41,10 @@ function QuickAction({
   return (
     <a
       aria-label={label}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-foreground)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)]"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-[0.55rem] border border-[var(--border)] bg-[var(--input-surface)] text-[var(--muted-foreground)] transition-[background-color,border-color,color] hover:border-white/16 hover:bg-[var(--subtle-surface)] hover:text-[var(--foreground)]"
       href={href}
       onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
       rel="noreferrer"
       target={href.startsWith("mailto:") || href.startsWith("tel:") ? undefined : "_blank"}
     >
@@ -60,88 +61,86 @@ export function DealCard({
   onOpenDetails,
   stageId,
 }: DealCardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({
-      data: {
-        dealId: card.id,
-        stageId,
-      },
-      disabled: !draggable,
-      id: card.id,
-    });
-  const { "aria-describedby": _ariaDescription, ...draggableAttributes } =
-    attributes;
+  const {
+    attributes,
+    isDragging,
+    isOver,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({
+    data: {
+      dealId: card.id,
+      stageId,
+      type: "card",
+    },
+    disabled: !draggable,
+    id: card.id,
+  });
+  const { "aria-describedby": _ariaDescription, ...draggableAttributes } = attributes;
   void _ariaDescription;
 
   const whatsappUrl = buildWhatsappUrl(card.contact.phone);
   const telUrl = buildTelUrl(card.contact.phone);
   const mailtoUrl = buildMailtoUrl(card.contact.email);
-  const style = !isDragging && transform
-    ? {
-        background: "var(--card)",
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : { background: "var(--card)" };
+  const style = {
+    background: "var(--board-card-surface)",
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
     <article
       className={cn(
-        "surface-shadow cursor-pointer rounded-[1.5rem] border border-white/70 p-4 transition-transform hover:-translate-y-0.5",
+        "surface-shadow cursor-pointer rounded-[0.5rem] border border-transparent p-3 transition-[border-color,box-shadow,transform] hover:!border-[var(--board-card-hover-border)] focus-visible:!border-[var(--board-card-hover-border)] focus-visible:outline-none",
+        draggable && "cursor-grab active:cursor-grabbing",
         isDragging && "pointer-events-none opacity-0",
+        isOver && !isDragging && "border-white/20",
         className,
       )}
       onClick={() => onOpenDetails(card.id)}
       ref={setNodeRef}
       style={style}
+      {...(draggable ? draggableAttributes : {})}
+      {...(draggable ? listeners : {})}
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="mb-2 flex items-start justify-between gap-3">
         <div className="space-y-1">
-          <h3 className="text-base font-semibold text-[var(--foreground)]">
+          <h3 className="text-sm font-semibold leading-5 text-[var(--foreground)]">
             {card.contact.name}
           </h3>
-          <p className="text-sm text-[var(--muted-foreground)]">
+          <p className="text-xs text-[var(--muted-foreground)]">
             {formatPhone(card.contact.phone)}
           </p>
         </div>
-        {draggable ? (
-          <button
-            aria-label="Arrastar card"
-            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
-            onClick={(event) => event.stopPropagation()}
-            type="button"
-            {...draggableAttributes}
-            {...listeners}
-          >
-            <GripVertical className="h-4 w-4" />
-          </button>
-        ) : null}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {contextLabel ? (
-          <span className="inline-flex rounded-full border border-[var(--border)] bg-[var(--subtle-surface)] px-3 py-1 text-xs font-semibold text-[var(--primary)]">
+          <span className="inline-flex rounded-[0.5rem] border border-[var(--border)] bg-[var(--subtle-surface)] px-3 py-1 text-xs font-semibold text-[var(--foreground)]">
             {contextLabel}
           </span>
         ) : null}
         {card.contact.origin ? (
-          <span className="inline-flex rounded-full bg-[var(--secondary)] px-3 py-1 text-xs font-semibold text-[var(--secondary-foreground)]">
+          <span className="inline-flex rounded-[0.5rem] border border-[var(--border)] bg-[var(--secondary)] px-3 py-1 text-xs font-semibold text-[var(--secondary-foreground)]">
             {card.contact.origin}
           </span>
         ) : null}
         <span
-          className="inline-flex rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+          className="inline-flex rounded-[0.5rem] px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
           style={{ background: "var(--subtle-surface)" }}
         >
           {card.assignedUser ? `Assinado: ${card.assignedUser.name}` : "Sem assinar"}
         </span>
       </div>
-      <div className="mt-4 flex items-center justify-between gap-2">
+      <div className="mt-3 flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <QuickAction href={whatsappUrl} icon={MessageCircleMore} label="WhatsApp" />
           <QuickAction href={telUrl} icon={Phone} label="Telefone" />
           <QuickAction href={mailtoUrl} icon={Mail} label="E-mail" />
         </div>
         <div
-          className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+          className="rounded-[0.5rem] px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
           style={{ background: "var(--subtle-surface)" }}
         >
           {card.notes.length} nota{card.notes.length === 1 ? "" : "s"}

@@ -21,7 +21,12 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       ...(await parseJsonBody<Record<string, unknown>>(request)),
       dealId: routeParams.dealId,
     });
-    const moved = await moveDeal(context.company!.id, payload.dealId, payload.stageId);
+    const moved = await moveDeal(
+      context.company!.id,
+      payload.dealId,
+      payload.stageId,
+      payload.movedAt,
+    );
 
     return NextResponse.json({
       ok: true,

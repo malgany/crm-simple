@@ -4,7 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import type { CSSProperties } from "react";
 import type { Stage } from "@/lib/app.types";
+import { resolveInitialContactStageId } from "@/lib/kanban";
 import type { ContactSchema } from "@/lib/validation";
 import { contactSchema } from "@/lib/validation";
 import { Button } from "@/components/ui/button";
@@ -15,47 +17,61 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useTheme } from "@/components/theme/theme-provider";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type NewContactDialogProps = {
+  initialStageId?: string | null;
   onCreate: (values: ContactSchema) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
   open: boolean;
   stages: Stage[];
 };
 
+const fieldClassName =
+  "rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] placeholder:text-[#9fadbc]";
+
+const selectClassName =
+  "flex h-11 w-full rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
+
+const dividerStyle = {
+  borderColor: "rgba(255, 255, 255, 0.06)",
+} satisfies CSSProperties;
+
+const boardPrimaryButtonClass =
+  "border-transparent bg-[#669DF1] text-[#091218] hover:bg-[#7ba9f3] hover:shadow-[0_10px_24px_-18px_rgba(102,157,241,0.95)]";
+
 export function NewContactDialog({
+  initialStageId,
   onCreate,
   onOpenChange,
   open,
   stages,
 }: NewContactDialogProps) {
+  const { theme } = useTheme();
   const form = useForm<ContactSchema>({
     defaultValues: {
       email: "",
       name: "",
       origin: "",
       phone: "",
-      stageId: stages[0]?.id ?? "",
+      stageId: resolveInitialContactStageId(stages, initialStageId),
     },
     resolver: zodResolver(contactSchema),
   });
 
   useEffect(() => {
-    if (!open) {
-      form.reset({
-        email: "",
-        name: "",
-        origin: "",
-        phone: "",
-        stageId: stages[0]?.id ?? "",
-      });
-      return;
-    }
+    const stageId = resolveInitialContactStageId(stages, initialStageId);
 
-    form.setValue("stageId", stages[0]?.id ?? "");
-  }, [form, open, stages]);
+    form.reset({
+      email: "",
+      name: "",
+      origin: "",
+      phone: "",
+      stageId,
+    });
+  }, [form, initialStageId, open, stages]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     const created = await onCreate(values);
@@ -65,19 +81,42 @@ export function NewContactDialog({
     }
   });
 
+  const dialogStyle = {
+    ["--border" as string]: "var(--board-dialog-border)",
+    ["--input-surface" as string]: "var(--board-dialog-input-surface)",
+    background: theme === "light" ? "#ffffff" : "var(--board-dialog-surface)",
+    borderColor: "var(--board-dialog-border)",
+  } satisfies CSSProperties;
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Novo contato</DialogTitle>
-          <DialogDescription>
-            Cadastre um lead com os dados minimos e escolha a etapa inicial.
-          </DialogDescription>
-        </DialogHeader>
-        <form className="space-y-5" onSubmit={onSubmit}>
+      <DialogContent
+        className="w-[min(94vw,39rem)] overflow-hidden rounded-[0.9rem] p-0"
+        style={dialogStyle}
+      >
+        <div className="px-5 py-5 md:px-6 md:py-6">
+          <DialogHeader className="mb-0 gap-3">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+              <Plus className="h-4 w-4 text-[var(--primary)]" />
+              Novo lead
+            </div>
+            <DialogTitle>Novo contato</DialogTitle>
+            <DialogDescription>
+              Cadastre os dados principais e escolha a etapa inicial do card.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
+        <form
+          className="space-y-4 border-t px-5 py-5 md:px-6 md:py-6"
+          onSubmit={onSubmit}
+          style={dividerStyle}
+        >
           <div className="space-y-2">
             <Label htmlFor="new-contact-name">Nome</Label>
             <Input
+              autoFocus
+              className={fieldClassName}
               id="new-contact-name"
               placeholder="Ex.: Maria Oliveira"
               {...form.register("name")}
@@ -86,9 +125,11 @@ export function NewContactDialog({
               {form.formState.errors.name?.message}
             </p>
           </div>
+
           <div className="space-y-2">
             <Label htmlFor="new-contact-phone">Telefone</Label>
             <Input
+              className={fieldClassName}
               id="new-contact-phone"
               placeholder="(65) 99999-1111"
               {...form.register("phone")}
@@ -97,10 +138,12 @@ export function NewContactDialog({
               {form.formState.errors.phone?.message}
             </p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2">
+
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="new-contact-email">E-mail</Label>
               <Input
+                className={fieldClassName}
                 id="new-contact-email"
                 placeholder="maria@empresa.com"
                 {...form.register("email")}
@@ -109,19 +152,22 @@ export function NewContactDialog({
                 {form.formState.errors.email?.message}
               </p>
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="new-contact-origin">Origem</Label>
               <Input
+                className={fieldClassName}
                 id="new-contact-origin"
                 placeholder="Instagram"
                 {...form.register("origin")}
               />
             </div>
           </div>
-          <div className="space-y-2">
+
+          <div className="space-y-2 border-t pt-5" style={dividerStyle}>
             <Label htmlFor="new-contact-stage">Etapa inicial</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               id="new-contact-stage"
               {...form.register("stageId")}
             >
@@ -135,15 +181,21 @@ export function NewContactDialog({
               {form.formState.errors.stageId?.message}
             </p>
           </div>
-          <div className="flex justify-end gap-3">
+
+          <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
             <Button
+              className="sm:min-w-32"
               onClick={() => onOpenChange(false)}
               type="button"
-              variant="ghost"
+              variant="outline"
             >
               Cancelar
             </Button>
-            <Button disabled={form.formState.isSubmitting} type="submit">
+            <Button
+              className={`${boardPrimaryButtonClass} sm:min-w-40`}
+              disabled={form.formState.isSubmitting}
+              type="submit"
+            >
               {form.formState.isSubmitting ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />
               ) : (

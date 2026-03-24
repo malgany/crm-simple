@@ -25,6 +25,17 @@ export function buildBoardState(stages: Stage[]) {
     }));
 }
 
+export function resolveInitialContactStageId(
+  stages: Array<Pick<Stage, "id">>,
+  preferredStageId?: string | null,
+) {
+  if (preferredStageId && stages.some((stage) => stage.id === preferredStageId)) {
+    return preferredStageId;
+  }
+
+  return stages[0]?.id ?? "";
+}
+
 export function filterStages(stages: Stage[], rawQuery: string) {
   const query = normalizeSearchToken(rawQuery);
   const phoneQuery = normalizePhone(rawQuery);
@@ -98,6 +109,136 @@ export function moveCardLocally(
       cards: sortCards([nextMovingCard, ...stage.cards]),
     };
   });
+}
+
+export function reorderCardWithinStage(
+  stages: Stage[],
+  stageId: string,
+  activeDealId: string,
+  overDealId: string,
+) {
+  return stages.map((stage) => {
+    if (stage.id !== stageId) {
+      return stage;
+    }
+
+    const activeIndex = stage.cards.findIndex((card) => card.id === activeDealId);
+    const overIndex = stage.cards.findIndex((card) => card.id === overDealId);
+
+    if (activeIndex === -1 || overIndex === -1 || activeIndex === overIndex) {
+      return stage;
+    }
+
+    const nextCards = [...stage.cards];
+    const [movingCard] = nextCards.splice(activeIndex, 1);
+    nextCards.splice(overIndex, 0, movingCard);
+
+    return {
+      ...stage,
+      cards: nextCards,
+    };
+  });
+}
+
+export function repositionCardLocally(
+  stages: Stage[],
+  activeDealId: string,
+  targetStageId: string,
+  overDealId?: string | null,
+) {
+  let movingCard: KanbanCard | null = null;
+  let sourceStageId: string | null = null;
+
+  const withoutActiveCard = stages.map((stage) => {
+    const activeIndex = stage.cards.findIndex((card) => card.id === activeDealId);
+
+    if (activeIndex === -1) {
+      return stage;
+    }
+
+    sourceStageId = stage.id;
+    movingCard = {
+      ...stage.cards[activeIndex],
+      stageId: targetStageId,
+    };
+
+    return {
+      ...stage,
+      cards: stage.cards.filter((card) => card.id !== activeDealId),
+    };
+  });
+
+  if (!movingCard || !sourceStageId) {
+    return stages;
+  }
+
+  const nextMovingCard = movingCard;
+
+  return withoutActiveCard.map((stage) => {
+    if (stage.id !== targetStageId) {
+      return stage;
+    }
+
+    const nextCards = [...stage.cards];
+    const targetIndex = overDealId
+      ? nextCards.findIndex((card) => card.id === overDealId)
+      : -1;
+
+    nextCards.splice(targetIndex === -1 ? nextCards.length : targetIndex, 0, nextMovingCard);
+
+    return {
+      ...stage,
+      cards: nextCards,
+    };
+  });
+}
+
+export function updateCardMovedAt(stages: Stage[], dealId: string, movedAt: string) {
+  return stages.map((stage) => ({
+    ...stage,
+    cards: stage.cards.map((card) =>
+      card.id === dealId ? { ...card, movedAt } : card,
+    ),
+  }));
+}
+
+export function resolveMovedAtForCardPosition(cards: KanbanCard[], dealId: string) {
+  const index = cards.findIndex((card) => card.id === dealId);
+
+  if (index === -1) {
+    return new Date().toISOString();
+  }
+
+  const previousCard = cards[index - 1] ?? null;
+  const nextCard = cards[index + 1] ?? null;
+
+  if (!previousCard && !nextCard) {
+    return new Date().toISOString();
+  }
+
+  if (!previousCard && nextCard) {
+    const nextTime = new Date(nextCard.movedAt).getTime();
+    return new Date(Math.max(Date.now(), nextTime + 60_000)).toISOString();
+  }
+
+  if (previousCard && !nextCard) {
+    const previousTime = new Date(previousCard.movedAt).getTime();
+    return new Date(previousTime - 60_000).toISOString();
+  }
+
+  const previousTime = new Date(previousCard!.movedAt).getTime();
+  const nextTime = new Date(nextCard!.movedAt).getTime();
+  const gap = previousTime - nextTime;
+
+  if (gap > 1) {
+    return new Date(nextTime + Math.floor(gap / 2)).toISOString();
+  }
+
+  if (previousTime - 1 > nextTime) {
+    return new Date(previousTime - 1).toISOString();
+  }
+
+  return new Date().toISOString();
 }
 
 export function prependCard(stages: Stage[], stageId: string, card: KanbanCard) {

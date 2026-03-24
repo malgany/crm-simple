@@ -6,7 +6,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex cursor-pointer items-center justify-center gap-2 rounded-[0.6rem] border text-sm font-semibold transition-[background-color,border-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       size: {
@@ -17,15 +17,15 @@ const buttonVariants = cva(
       },
       variant: {
         default:
-          "border-transparent bg-[var(--primary)] text-[var(--primary-foreground)] hover:bg-[#0f4f53]",
+          "border-transparent bg-[var(--primary)] text-[var(--primary-foreground)] hover:brightness-95",
         danger:
           "border-transparent bg-[var(--danger)] text-white hover:bg-[#a12f27]",
         ghost:
           "border-transparent bg-transparent text-[var(--foreground)] hover:bg-[var(--subtle-surface)]",
         outline:
-          "border-[var(--border)] bg-[var(--input-surface)] text-[var(--foreground)] hover:bg-[var(--subtle-surface)]",
+          "border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--subtle-surface)]",
         secondary:
-          "border-transparent bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:brightness-95",
+          "border-[var(--border)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[var(--subtle-surface)]",
       },
     },
     defaultVariants: {
