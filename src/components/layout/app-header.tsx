@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
-import { ChevronLeft, LoaderCircle, LogOut, Palette } from "lucide-react";
+import { ChevronLeft, ChevronRight, LoaderCircle, LogOut, Palette } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useId, useRef, useState } from "react";
@@ -222,7 +222,7 @@ export function AppHeader({
                           <Palette className="h-4 w-4 text-[var(--muted-foreground)]" />
                           Background
                         </span>
-                        <ChevronLeft className="h-4 w-4 text-[var(--muted-foreground)]" />
+                        <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
                       </button>
                       {backgroundMenuOpen ? (
                         <div
@@ -242,7 +242,7 @@ export function AppHeader({
                                 className={cn(
                                   "h-11 w-11 cursor-pointer rounded-[0.7rem] border border-white/12 transition-[transform,border-color,box-shadow] hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]",
                                   boardBackground === option.id &&
-                                    "border-white/40 ring-2 ring-[#669DF1]",
+                                  "border-white/40 ring-2 ring-[#669DF1]",
                                 )}
                                 key={option.id}
                                 onClick={() => {

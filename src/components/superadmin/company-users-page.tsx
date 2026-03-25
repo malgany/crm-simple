@@ -278,8 +278,9 @@ export function CompanyUsersPage({
   };
 
   return (
-    <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
+    <main className="min-h-screen flex flex-col">
       <AppHeader
+        className="rounded-none border-x-0 border-t-0 px-4 md:px-8 shrink-0"
         companyName={companyState.name}
         menuItems={[
           {
@@ -301,7 +302,8 @@ export function CompanyUsersPage({
         roleLabel="Superadmin"
       />
 
-      <section className="mt-4 px-1">
+      <div className="flex-1 px-4 py-6 md:px-8 md:py-8 w-full max-w-6xl mx-auto">
+        <section className="px-1">
         <h1 className="text-2xl font-semibold text-[var(--foreground)]">Gestão da empresa</h1>
       </section>
 
@@ -565,6 +567,8 @@ export function CompanyUsersPage({
           </div>
         </section>
       ) : null}
+
+      </div>
 
       <Dialog onOpenChange={(open) => !open && setEditingUser(null)} open={!!editingUser}>
         <DialogContent>

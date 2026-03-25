@@ -684,7 +684,7 @@ export function KanbanPage({
     const didOrderChange =
       !!previousStage &&
       previousStage.cards.map((card) => card.id).join("|") !==
-        currentStage.cards.map((card) => card.id).join("|");
+      currentStage.cards.map((card) => card.id).join("|");
 
     if (!didStageChange && !didOrderChange) {
       if (dragSnapshot) {
@@ -1001,7 +1001,6 @@ export function KanbanPage({
         onAssign={handleAssignDeal}
         onAddNote={handleAddNote}
         onDeleteContact={handleDeleteContact}
-        onMove={(dealId, stageId) => handleMoveDeal({ dealId, stageId })}
         onOpenChange={closeDialog}
         onUpdateContact={handleUpdateContact}
         open={!!selectedCard}

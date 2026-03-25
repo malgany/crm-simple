@@ -220,35 +220,36 @@ export function MemberManagementPage({
 
   return (
     <main
-      className="min-h-screen px-4 py-5 md:px-8 md:py-6"
+      className="min-h-screen flex flex-col"
       style={{ background: "var(--management-background)" }}
     >
-      <div className="mx-auto w-full max-w-6xl">
-        <AppHeader
-          accountEmail={userEmail}
-          accountName={viewerName}
-          companyName={companyName}
-          menuItems={[
-            {
-              icon: LayoutDashboard,
-              label: "Kanban",
-              onSelect: () => router.push("/negociacoes"),
-            },
-            {
-              icon: SunMoon,
-              label: "Alternar tema",
-              onSelect: toggleTheme,
-            },
-            {
-              icon: LockKeyhole,
-              label: "Redefinir senha",
-              onSelect: () => setResetPasswordOpen(true),
-            },
-          ]}
-          roleLabel="Admin"
-        />
+      <AppHeader
+        accountEmail={userEmail}
+        accountName={viewerName}
+        className="rounded-none border-x-0 border-t-0 px-4 md:px-8"
+        companyName={companyName}
+        menuItems={[
+          {
+            icon: LayoutDashboard,
+            label: "Kanban",
+            onSelect: () => router.push("/negociacoes"),
+          },
+          {
+            icon: SunMoon,
+            label: "Alternar tema",
+            onSelect: toggleTheme,
+          },
+          {
+            icon: LockKeyhole,
+            label: "Redefinir senha",
+            onSelect: () => setResetPasswordOpen(true),
+          },
+        ]}
+        roleLabel="Admin"
+      />
 
-        <div className="py-6 md:py-8">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8 flex-1">
+        <div className="w-full">
           <section className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
               Administração
@@ -268,10 +269,9 @@ export function MemberManagementPage({
           >
             <div
               className="border-b border-[var(--border)] px-5 py-5 md:px-6"
-              style={{ background: "var(--panel-accent-surface)" }}
+              style={{ background: "var(--panel-surface)" }}
             >
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-[var(--primary)]" />
                 <h2 className="text-lg font-semibold text-[var(--foreground)]">
                   Novo usuário
                 </h2>
@@ -499,11 +499,11 @@ export function MemberManagementPage({
                       setEditingUser((current) =>
                         current
                           ? {
-                              ...current,
-                              status: event.target.value as
-                                | "active"
-                                | "inactive",
-                            }
+                            ...current,
+                            status: event.target.value as
+                              | "active"
+                              | "inactive",
+                          }
                           : current,
                       )
                     }
@@ -542,9 +542,9 @@ export function MemberManagementPage({
                         setEditingUser((current) =>
                           current
                             ? {
-                                ...current,
-                                confirmPassword: event.target.value,
-                              }
+                              ...current,
+                              confirmPassword: event.target.value,
+                            }
                             : current,
                         )
                       }

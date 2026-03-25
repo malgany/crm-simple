@@ -54,7 +54,7 @@ export function StageColumn({
           </span>
         </div>
       </header>
-      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3">
+      <div className="custom-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-2">
         <SortableContext
           items={stage.cards.map((card) => card.id)}
           strategy={verticalListSortingStrategy}
@@ -80,15 +80,18 @@ export function StageColumn({
             </div>
           )}
         </SortableContext>
+      </div>
+
+      <footer className="shrink-0 px-3 pb-3 pt-1">
         <button
-          className="inline-flex cursor-pointer items-center gap-2 rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          className="flex w-full cursor-pointer items-center gap-2 rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-[var(--border)] hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
           onClick={() => onAddContact(stage.id)}
           type="button"
         >
           <Plus className="h-4 w-4" />
           Adicionar contato
         </button>
-      </div>
+      </footer>
     </section>
   );
 }

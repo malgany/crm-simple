@@ -97,16 +97,21 @@ export function ResetPasswordDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="w-[min(94vw,34rem)]"
+        className="w-[min(94vw,34rem)] overflow-hidden p-0 md:p-0 sm:rounded-2xl gap-0"
         style={dialogStyle}
       >
-        <DialogHeader>
-          <DialogTitle>Redefinir senha</DialogTitle>
-          <DialogDescription>
+        <DialogHeader className="border-b mb-0 px-6 py-5 md:px-7" style={{ borderColor: "var(--board-dialog-border)" }}>
+          <DialogTitle className="text-xl font-bold">Redefinir senha</DialogTitle>
+          <DialogDescription className="mt-1">
             Informe a senha atual e confirme a nova senha para concluir a troca.
           </DialogDescription>
         </DialogHeader>
-        <form autoComplete="on" className="space-y-5" onSubmit={onSubmit}>
+        <form 
+          autoComplete="on" 
+          className="space-y-5 px-6 pt-6 pb-8 md:px-7 md:pt-7 md:pb-10" 
+          onSubmit={onSubmit}
+          style={{ background: "var(--board-dialog-section-surface)" }}
+        >
           <input
             aria-hidden="true"
             autoComplete="username"
@@ -168,8 +173,9 @@ export function ResetPasswordDialog({
               {form.formState.errors.confirmPassword?.message}
             </p>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <Button
+              className="sm:min-w-32"
               disabled={form.formState.isSubmitting}
               type="submit"
             >

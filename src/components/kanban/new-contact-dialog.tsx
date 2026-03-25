@@ -83,19 +83,19 @@ export function NewContactDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="w-[min(94vw,39rem)]" style={dialogStyle}>
-        <DialogHeader className="gap-3">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-            <Plus className="h-4 w-4 text-[var(--primary)]" />
-            Novo lead
-          </div>
-          <DialogTitle>Novo contato</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="w-[min(94vw,39rem)] overflow-hidden p-0 md:p-0 sm:rounded-2xl gap-0" style={dialogStyle}>
+        <DialogHeader className="border-b mb-0 px-6 py-5 md:px-7" style={{ borderColor: "var(--board-dialog-border)" }}>
+          <DialogTitle className="text-xl font-bold">Novo contato</DialogTitle>
+          <DialogDescription className="mt-1">
             Cadastre os dados principais e escolha a etapa inicial do card.
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form 
+          className="space-y-5 px-6 pt-6 pb-8 md:px-7 md:pt-7 md:pb-10" 
+          onSubmit={onSubmit}
+          style={{ background: "var(--board-dialog-section-surface)" }}
+        >
           <div className="space-y-2">
             <Label htmlFor="new-contact-name">Nome</Label>
             <Input
@@ -166,9 +166,9 @@ export function NewContactDialog({
             </p>
           </div>
 
-          <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <Button
-              className="sm:min-w-32"
+              className="sm:min-w-32 hover:bg-[var(--board-dialog-surface)] border-[var(--board-dialog-border)]"
               onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"

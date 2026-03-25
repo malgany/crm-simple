@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  ArrowRightLeft,
   CircleAlert,
   LoaderCircle,
   Mail,
@@ -23,7 +22,6 @@ import {
   buildTelUrl,
   buildWhatsappUrl,
   formatDateTime,
-  formatPhone,
 } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,7 +43,6 @@ type ContactDialogProps = {
   onAssign: (dealId: string, assignedUserId: string | null) => Promise<boolean>;
   onAddNote: (dealId: string, values: NoteSchema) => Promise<boolean>;
   onDeleteContact: (dealId: string) => Promise<boolean>;
-  onMove: (dealId: string, stageId: string) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
   onUpdateContact: (
     dealId: string,
@@ -59,13 +56,21 @@ type ContactDialogProps = {
 const fieldClassName =
   "rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] placeholder:text-[#9fadbc]";
 
-const selectClassName =
-  "flex h-11 w-full rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
-
 const noteCardStyle = {
   background: "var(--board-dialog-input-surface)",
   borderColor: "var(--board-dialog-border)",
 } satisfies CSSProperties;
+
+function getAvatarLabel(value: string | null | undefined) {
+  const normalized = value?.trim() ?? "";
+
+  if (!normalized) {
+    return "??";
+  }
+
+  return normalized.slice(0, 2).toUpperCase();
+}
+
 
 function ContactShortcut({
   href,
@@ -104,7 +109,6 @@ export function ContactDialog({
   onAssign,
   onAddNote,
   onDeleteContact,
-  onMove,
   onOpenChange,
   onUpdateContact,
   open,
@@ -112,13 +116,8 @@ export function ContactDialog({
   viewerId,
 }: ContactDialogProps) {
   const { theme } = useTheme();
-  const dividerStyle = {
-    borderColor:
-      theme === "light" ? "rgb(232 234 235)" : "rgba(255, 255, 255, 0.06)",
-  } satisfies CSSProperties;
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedStageId, setSelectedStageId] = useState(card?.stageId ?? "");
   const contactForm = useForm<UpdateContactSchema>({
     defaultValues: {
       email: "",
@@ -141,7 +140,6 @@ export function ContactDialog({
     }
 
     setConfirmDeleteOpen(false);
-    setSelectedStageId(card.stageId);
     contactForm.reset({
       email: card.contact.email ?? "",
       name: card.contact.name,
@@ -191,18 +189,6 @@ export function ContactDialog({
     }
   });
 
-  const handleMove = async () => {
-    if (!selectedStageId || selectedStageId === card.stageId) {
-      return;
-    }
-
-    const moved = await onMove(card.id, selectedStageId);
-
-    if (!moved) {
-      setSelectedStageId(card.stageId);
-    }
-  };
-
   const handleAssignToggle = async () => {
     await onAssign(
       card.id,
@@ -234,19 +220,32 @@ export function ContactDialog({
   return (
     <>
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogContent className="w-[min(95vw,61rem)]" style={dialogStyle}>
-          <DialogHeader className="gap-2">
-            <DialogTitle>{card.contact.name}</DialogTitle>
-            <DialogDescription>
+        <DialogContent
+          className="flex max-h-[80vh] w-[min(95vw,62rem)] flex-col gap-0 overflow-y-auto p-0 sm:rounded-2xl md:p-0 lg:overflow-hidden"
+          style={dialogStyle}
+        >
+          <DialogHeader
+            className="mb-0 shrink-0 border-b px-6 py-5 md:px-7"
+            style={{ borderColor: "var(--board-dialog-border)" }}
+          >
+            <DialogTitle className="text-xl font-bold">{card.contact.name}</DialogTitle>
+            <DialogDescription className="mt-1">
               Etapa atual: <strong>{currentStageName}</strong>
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-            <section className="space-y-4">
-              <div className="space-y-3 border-b pb-4" style={dividerStyle}>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                  Acoes rapidas
+          <div
+            className="grid divide-y lg:min-h-0 lg:flex-1 lg:grid-cols-[1.15fr_0.85fr] lg:divide-y-0 lg:divide-x lg:overflow-hidden"
+            style={{ borderColor: "var(--board-dialog-border)" }}
+          >
+            {/* LADO B: FORMULARIO (Mais claro) */}
+            <section
+              className="space-y-7 px-6 pt-6 pb-8 md:px-7 md:pt-7 md:pb-10 lg:min-h-0 lg:overflow-y-auto lg:pr-5 custom-scrollbar"
+              style={{ background: "var(--board-dialog-section-surface)" }}
+            >
+              <div className="space-y-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)] border-b pb-2" style={{ borderColor: "var(--board-dialog-border)" }}>
+                  Ações rápidas
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <ContactShortcut
@@ -265,6 +264,7 @@ export function ContactDialog({
                       onClick={handleAssignToggle}
                       type="button"
                       variant="outline"
+                      className="bg-transparent hover:bg-[var(--board-dialog-surface)] hover:text-[var(--foreground)] border-[var(--board-dialog-border)]"
                     >
                       {card.assignedUser?.auth_user_id === viewerId
                         ? "Liberar assinatura"
@@ -272,14 +272,18 @@ export function ContactDialog({
                     </Button>
                   ) : null}
                 </div>
-                <p className="text-sm text-[var(--muted-foreground)]">
+                <p className="text-[13px] text-[var(--muted-foreground)]">
                   {card.assignedUser
                     ? `Acompanhado por ${card.assignedUser.name}.`
                     : "Nenhum usuario assinou este card ainda."}
                 </p>
               </div>
 
-              <form className="space-y-4" onSubmit={handleUpdateContact}>
+              <form className="space-y-5" onSubmit={handleUpdateContact}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)] border-b pb-2" style={{ borderColor: "var(--board-dialog-border)" }}>
+                  Detalhes do contato
+                </p>
+
                 <div className="space-y-2">
                   <Label htmlFor="contact-name">Nome</Label>
                   <Input
@@ -326,7 +330,7 @@ export function ContactDialog({
                   </div>
                 </div>
 
-                <div className="flex flex-col-reverse gap-3 pt-1 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col-reverse gap-3 mt-1 sm:flex-row sm:items-center sm:justify-between">
                   <Button
                     disabled={
                       contactForm.formState.isSubmitting ||
@@ -335,7 +339,8 @@ export function ContactDialog({
                     }
                     onClick={() => setConfirmDeleteOpen(true)}
                     type="button"
-                    variant="danger"
+                    variant="ghost"
+                    className="text-[var(--danger)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
                   >
                     <Trash2 className="h-4 w-4" />
                     Excluir contato
@@ -353,62 +358,26 @@ export function ContactDialog({
                   </Button>
                 </div>
               </form>
-
-              <div className="space-y-2 border-t pt-4" style={dividerStyle}>
-                <Label htmlFor="move-stage">Mover para etapa</Label>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <div className="flex-1 space-y-2">
-                    <select
-                      className={selectClassName}
-                      id="move-stage"
-                      onChange={(event) =>
-                        setSelectedStageId(event.target.value)
-                      }
-                      value={selectedStageId}
-                    >
-                      {stages.map((stage) => (
-                        <option key={stage.id} value={stage.id}>
-                          {stage.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <Button
-                    disabled={
-                      !selectedStageId ||
-                      selectedStageId === card.stageId ||
-                      contactForm.formState.isSubmitting ||
-                      noteForm.formState.isSubmitting ||
-                      isDeleting
-                    }
-                    onClick={handleMove}
-                    type="button"
-                    variant="outline"
-                  >
-                    <ArrowRightLeft className="h-4 w-4" />
-                    Mover
-                  </Button>
-                </div>
-              </div>
             </section>
 
+            {/* LADO B: OBSERVACOES (Mais escuro, fundo padrao) */}
             <section
-              className="space-y-4 lg:border-l lg:pl-5"
-              style={dividerStyle}
+              className="flex flex-col space-y-5 px-6 pt-6 pb-8 md:px-7 md:pt-7 md:pb-10 lg:min-h-0"
+              style={{ background: "transparent" }}
             >
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b pb-2" style={{ borderColor: "var(--board-dialog-border)" }}>
                   <NotebookPen className="h-4 w-4 text-[var(--muted-foreground)]" />
-                  <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                    Observacoes
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.1em] text-[var(--foreground)]">
+                    Observações
                   </h3>
                 </div>
                 <form className="space-y-3" onSubmit={handleAddNote}>
-                  <Textarea
-                    className={`${fieldClassName} min-h-32`}
+                  <Input
+                    className={`${fieldClassName} h-11`}
                     id="note-body"
                     maxLength={1000}
-                    placeholder="Ex.: falou que retorna depois do almoco."
+                    placeholder="Escrever um comentário..."
                     {...noteForm.register("body")}
                   />
                   <div className="flex items-center justify-between gap-3">
@@ -422,38 +391,51 @@ export function ContactDialog({
                       {noteForm.formState.isSubmitting ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
                       ) : null}
-                      Registrar observacao
+                      Salvar
                     </Button>
                   </div>
                 </form>
               </div>
 
-              <div className="space-y-3">
+              <div className="custom-scrollbar flex-1 space-y-3 pt-2 lg:min-h-0 lg:overflow-y-auto lg:pr-1">
                 {card.notes.length ? (
                   card.notes.map((note) => (
                     <article
-                      className="rounded-[0.75rem] border p-4"
+                      className="flex gap-3"
                       key={note.id}
-                      style={noteCardStyle}
                     >
-                      <p className="text-sm leading-6 text-[var(--foreground)]">
-                        {note.body}
-                      </p>
-                      <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-                        {note.authorName} • {formatDateTime(note.createdAt)}
-                      </p>
+                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-sm font-semibold text-[var(--primary-foreground)]">
+                        {getAvatarLabel(note.authorName)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-[14px] font-semibold text-[var(--foreground)]">
+                            {note.authorName}
+                          </span>
+                          <span className="text-[13px] text-[var(--muted-foreground)]">
+                            {formatDateTime(note.createdAt)}
+                          </span>
+                        </div>
+                        <div
+                          className="rounded-[0.65rem] border px-4 py-3 surface-shadow"
+                          style={noteCardStyle}
+                        >
+                          <p className="text-[14px] leading-relaxed text-[var(--card-foreground)] break-words whitespace-pre-wrap">
+                            {note.body}
+                          </p>
+                        </div>
+                      </div>
                     </article>
                   ))
                 ) : (
                   <div
-                    className="rounded-[0.75rem] border border-dashed p-6 text-center text-sm text-[var(--muted-foreground)]"
+                    className="rounded-[0.7rem] border border-dashed px-4 py-8 text-center text-[13px] text-[var(--muted-foreground)]"
                     style={{
                       background: "transparent",
                       borderColor: "var(--board-dialog-border)",
                     }}
                   >
-                    Ainda nao ha observacoes para {card.contact.name}. O
-                    telefone principal e {formatPhone(card.contact.phone)}.
+                    Ainda não há observações para {card.contact.name}.
                   </div>
                 )}
               </div>
@@ -471,7 +453,7 @@ export function ContactDialog({
             </DialogTitle>
             <DialogDescription>
               Gostaria mesmo de excluir <strong>{card.contact.name}</strong>?
-              Esta acao remove o card e as observacoes vinculadas.
+              Esta ação remove o card e as observações vinculadas.
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3">
@@ -494,7 +476,7 @@ export function ContactDialog({
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Confirmar exclusao
+              Confirmar exclusão
             </Button>
           </div>
         </DialogContent>
