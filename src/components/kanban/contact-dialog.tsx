@@ -43,6 +43,7 @@ type ContactDialogProps = {
   onAssign: (dealId: string, assignedUserId: string | null) => Promise<boolean>;
   onAddNote: (dealId: string, values: NoteSchema) => Promise<boolean>;
   onDeleteContact: (dealId: string) => Promise<boolean>;
+  onMoveContact: (dealId: string, stageId: string) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
   onUpdateContact: (
     dealId: string,
@@ -109,6 +110,7 @@ export function ContactDialog({
   onAssign,
   onAddNote,
   onDeleteContact,
+  onMoveContact,
   onOpenChange,
   onUpdateContact,
   open,
@@ -277,6 +279,28 @@ export function ContactDialog({
                     ? `Acompanhado por ${card.assignedUser.name}.`
                     : "Nenhum usuario assinou este card ainda."}
                 </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)] border-b pb-2" style={{ borderColor: "var(--board-dialog-border)" }}>
+                  Mover etapa
+                </p>
+                <select
+                  className="flex h-10 w-full min-w-0 appearance-none rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] px-3 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] focus:border-transparent focus:ring-2 focus:ring-[var(--ring)] cursor-pointer"
+                  onChange={(e) => {
+                    const nextStageId = e.target.value;
+                    if (nextStageId !== card.stageId) {
+                      onMoveContact(card.id, nextStageId);
+                    }
+                  }}
+                  value={card.stageId}
+                >
+                  {stages.map((stage) => (
+                    <option key={stage.id} value={stage.id}>
+                      {stage.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <form className="space-y-5" onSubmit={handleUpdateContact}>

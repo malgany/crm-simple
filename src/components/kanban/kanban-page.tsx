@@ -217,6 +217,44 @@ export function KanbanPage({
   const pendingRefreshRef = useRef(false);
   const refreshBoardRef = useRef<() => Promise<void>>(async () => { });
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isDraggingScrollRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const startDragScroll = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (
+      target.closest("button") ||
+      target.closest("a") ||
+      target.closest("input") ||
+      target.closest("article") ||
+      target.closest("section")
+    ) {
+      return;
+    }
+    isDraggingScrollRef.current = true;
+    startXRef.current = e.pageX - e.currentTarget.offsetLeft;
+    scrollLeftRef.current = e.currentTarget.scrollLeft;
+    e.currentTarget.style.cursor = "grabbing";
+    e.currentTarget.style.userSelect = "none";
+  };
+
+  const onDragScrollMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - e.currentTarget.offsetLeft;
+    const walk = (x - startXRef.current) * 1.5;
+    e.currentTarget.scrollLeft = scrollLeftRef.current - walk;
+  };
+
+  const endDragScroll = (e: React.PointerEvent<HTMLDivElement>) => {
+    isDraggingScrollRef.current = false;
+    e.currentTarget.style.cursor = "";
+    e.currentTarget.style.userSelect = "";
+  };
+
   const isBoardLocked = () =>
     dragDealIdRef.current !== null ||
     selectedDealIdRef.current !== null ||
@@ -792,17 +830,17 @@ export function KanbanPage({
         </div>
       </section>
 
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-5 pt-6 md:px-8 md:pb-6">
+      <div className="flex min-h-0 flex-1 flex-col pb-5 pt-6 md:pb-6">
         {activeSearchLabel ? (
-          <p className="mb-4 text-sm text-[var(--muted-foreground)]">
+          <p className="mb-4 px-4 text-sm text-[var(--muted-foreground)] md:px-8">
             {filteredCardCount} resultado{filteredCardCount === 1 ? "" : "s"} para{" "}
             <span className="font-semibold text-[var(--foreground)]">{activeSearchLabel}</span>
           </p>
         ) : null}
-        <section className="flex min-h-0 flex-1 flex-col md:hidden">
+        <section className="flex min-h-0 flex-1 flex-col px-4 md:hidden md:px-8">
           <div
             className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-3"
-            style={{ background: "var(--panel-surface)" }}
+            style={{ background: "var(--background)" }}
           >
             <div className="flex flex-wrap gap-2">
               {mobileStageTabs.map((tab) => {
@@ -838,48 +876,38 @@ export function KanbanPage({
             </p>
           </div>
 
-          <div className="custom-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-4">
+          <div className="custom-scrollbar mt-4 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2">
             {mobileDealList.length ? (
-              <>
-                {mobileDealList.map(({ card, stageName }) => (
-                  <DealCard
-                    card={card}
-                    contextLabel={activeMobileStageFilter === "all" ? stageName : null}
-                    draggable={false}
-                    key={card.id}
-                    onOpenDetails={(dealId) => openDeal(dealId, "details")}
-                    stageId={card.stageId}
-                  />
-                ))}
-                <button
-                  className="inline-flex cursor-pointer items-center gap-2 self-start rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-                  onClick={() => openNewContact(mobileNewContactStageId)}
-                  type="button"
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar contato
-                </button>
-              </>
+              mobileDealList.map(({ card, stageName }) => (
+                <DealCard
+                  card={card}
+                  contextLabel={activeMobileStageFilter === "all" ? stageName : null}
+                  draggable={false}
+                  key={card.id}
+                  onOpenDetails={(dealId) => openDeal(dealId, "details")}
+                  stageId={card.stageId}
+                />
+              ))
             ) : (
-              <>
-                <div
-                  className="surface-shadow flex min-h-52 flex-1 flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
-                  style={{ background: "var(--panel-surface)" }}
-                >
-                  {activeMobileStageFilter === "all"
-                    ? "Nenhum resultado para a busca atual."
-                    : `Nenhum card na etapa ${activeMobileStageName}.`}
-                </div>
-                <button
-                  className="inline-flex cursor-pointer items-center gap-2 self-start rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-                  onClick={() => openNewContact(mobileNewContactStageId)}
-                  type="button"
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar contato
-                </button>
-              </>
+              <div
+                className="surface-shadow flex min-h-52 flex-1 flex-col items-center justify-center rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] p-6 text-center text-sm text-[var(--muted-foreground)]"
+                style={{ background: "var(--panel-surface)" }}
+              >
+                {activeMobileStageFilter === "all"
+                  ? "Nenhum resultado para a busca atual."
+                  : `Nenhum card na etapa ${activeMobileStageName}.`}
+              </div>
             )}
+          </div>
+          <div className="shrink-0 pt-1">
+            <button
+              className="flex w-full cursor-pointer items-center gap-2 rounded-[0.6rem] px-2 py-2 text-sm font-medium text-[var(--muted-foreground)] transition-[background-color,color] hover:bg-white/5 hover:text-[var(--foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+              onClick={() => openNewContact(mobileNewContactStageId)}
+              type="button"
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar contato
+            </button>
           </div>
         </section>
 
@@ -944,7 +972,16 @@ export function KanbanPage({
             setDragOverStageId(stageId);
           }}
         >
-          <div className="custom-scrollbar hidden min-h-0 flex-1 items-start gap-4 overflow-x-auto overflow-y-hidden pb-4 md:flex">
+          <div
+            className="custom-scrollbar hidden min-h-0 flex-1 items-start gap-4 overflow-x-auto overflow-y-hidden pb-4 md:flex"
+            onPointerDown={startDragScroll}
+            onPointerLeave={endDragScroll}
+            onPointerMove={onDragScrollMove}
+            onPointerUp={endDragScroll}
+            ref={scrollContainerRef}
+          >
+            {/* Start spacer for edge-to-edge scroll */}
+            <div className="w-0 shrink-0 md:w-4" />
             {filteredStages.map((stage) => (
               <StageColumn
                 isDragHighlighted={
@@ -958,6 +995,8 @@ export function KanbanPage({
                 stage={stage}
               />
             ))}
+            {/* End spacer for edge-to-edge scroll */}
+            <div className="w-0 shrink-0 md:w-4" />
           </div>
           <DragOverlay zIndex={2000}>
             {activeDragCard ? (
@@ -1001,6 +1040,9 @@ export function KanbanPage({
         onAssign={handleAssignDeal}
         onAddNote={handleAddNote}
         onDeleteContact={handleDeleteContact}
+        onMoveContact={async (dealId, stageId) => {
+          return await handleMoveDeal({ dealId, stageId });
+        }}
         onOpenChange={closeDialog}
         onUpdateContact={handleUpdateContact}
         open={!!selectedCard}

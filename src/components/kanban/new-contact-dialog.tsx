@@ -32,8 +32,7 @@ type NewContactDialogProps = {
 const fieldClassName =
   "rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] placeholder:text-[#9fadbc]";
 
-const selectClassName =
-  "flex h-11 w-full rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
+
 
 export function NewContactDialog({
   initialStageId,
@@ -87,7 +86,7 @@ export function NewContactDialog({
         <DialogHeader className="border-b mb-0 px-6 py-5 md:px-7" style={{ borderColor: "var(--board-dialog-border)" }}>
           <DialogTitle className="text-xl font-bold">Novo contato</DialogTitle>
           <DialogDescription className="mt-1">
-            Cadastre os dados principais e escolha a etapa inicial do card.
+            Cadastre os dados principais do novo contato.
           </DialogDescription>
         </DialogHeader>
 
@@ -111,29 +110,29 @@ export function NewContactDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-contact-phone">Telefone</Label>
+            <Label htmlFor="new-contact-email">E-mail</Label>
             <Input
               className={fieldClassName}
-              id="new-contact-phone"
-              placeholder="(65) 99999-1111"
-              {...form.register("phone")}
+              id="new-contact-email"
+              placeholder="maria@empresa.com"
+              {...form.register("email")}
             />
             <p className="text-sm text-[var(--danger)]">
-              {form.formState.errors.phone?.message}
+              {form.formState.errors.email?.message}
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="new-contact-email">E-mail</Label>
+              <Label htmlFor="new-contact-phone">Telefone</Label>
               <Input
                 className={fieldClassName}
-                id="new-contact-email"
-                placeholder="maria@empresa.com"
-                {...form.register("email")}
+                id="new-contact-phone"
+                placeholder="(65) 99999-1111"
+                {...form.register("phone")}
               />
               <p className="text-sm text-[var(--danger)]">
-                {form.formState.errors.email?.message}
+                {form.formState.errors.phone?.message}
               </p>
             </div>
 
@@ -142,29 +141,13 @@ export function NewContactDialog({
               <Input
                 className={fieldClassName}
                 id="new-contact-origin"
-                placeholder="Instagram"
+                placeholder="Ex.: Instagram"
                 {...form.register("origin")}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="new-contact-stage">Etapa inicial</Label>
-            <select
-              className={selectClassName}
-              id="new-contact-stage"
-              {...form.register("stageId")}
-            >
-              {stages.map((stage) => (
-                <option key={stage.id} value={stage.id}>
-                  {stage.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-[var(--danger)]">
-              {form.formState.errors.stageId?.message}
-            </p>
-          </div>
+          <input type="hidden" {...form.register("stageId")} />
 
           <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
             <Button
