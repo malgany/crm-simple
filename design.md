@@ -55,6 +55,7 @@ Estados de hover, foco, drag, selecao e modal precisam ser mais consistentes que
 
 - `Manrope` deve ser usada em toda a interface principal
 - `JetBrains Mono` deve ser reservada para contextos tecnicos, IDs, blocos utilitarios ou futuras areas de sistema
+- controles nativos (`button`, `input`, `textarea`, `select`) devem herdar apenas a familia tipografica global; nao use `font: inherit` como regra global, porque isso apaga `font-size` e `font-weight` definidos pelos componentes
 
 ### Hierarquia de texto
 
@@ -81,7 +82,7 @@ O projeto trabalha com dois eixos visuais:
 - `--background`: `#f4f1ea`
 - `--foreground`: `#13232e`
 - `--card`: `#fffdf8`
-- `--header-surface`: `linear-gradient(180deg, #fffdf9 0%, #f4efe5 100%)`
+- `--header-surface`: `#ffffff`
 - `--panel-surface`: `rgba(255, 255, 255, 0.9)`
 - `--panel-accent-surface`: gradiente claro com brilho sutil em verde-petroleo
 - `--subtle-surface`: `rgba(248, 250, 252, 0.75)`
@@ -137,11 +138,10 @@ No tema dark, o board usa uma identidade propria:
 
 - destaque de drag no kanban: `#669DF1`
 
-Essa cor tambem pode aparecer em CTAs principais dentro do fluxo do kanban, como `Criar contato`, `Salvar contato` e `Registrar observacao`.
-
 Regra:
 
-- use `#669DF1` para drag e acoes principais do board
+- use `#669DF1` para drag, realce de coluna, estado selecionado do background picker e outros acentos tecnicos do board
+- use `--primary` como CTA principal em toda a aplicacao, inclusive nos modais do kanban
 - nao transforme esse azul na cor principal global do produto
 
 ## 5. Bordas, Raios e Sombras
@@ -150,21 +150,16 @@ Regra:
 
 Os tokens base atuais sao:
 
-- `--radius-sm`: `3px`
-- `--radius-md`: `3px`
-- `--radius-lg`: `3px`
-
-Na pratica, o projeto hoje convive com dois comportamentos:
-
-- controles e elementos utilitarios usam raio curto ou moderado
-- alguns shells legados usam cantos maiores (`0.5rem`, `0.75rem`, `1.5rem`, `2rem`)
+- `--radius-sm`: `0.45rem`
+- `--radius-md`: `0.6rem`
+- `--radius-lg`: `0.75rem`
 
 ### Regra para trabalho novo
 
-- prefira raios curtos em controles
-- botoes e acoes do board hoje usam com frequencia `0.55rem` a `0.65rem`
-- use `0.5rem` a `0.75rem` para cards e blocos do kanban
-- use raios maiores apenas em shells amplos ja alinhados com telas legadas, como auth e alguns paineis administrativos
+- prefira os tokens de raio antes de criar valores inline
+- controles, selects e botoes pequenos devem usar `--radius-md`
+- cards, paineis e blocos operacionais devem usar `--radius-lg`
+- raios maiores (`1.75rem` ou `2rem`) ficam reservados para auth, estados de confirmacao e shells hero explicitamente intencionais
 
 ### Bordas
 
@@ -230,13 +225,13 @@ Variantes atuais:
 
 - `default`: fundo `primary`, texto `primary-foreground`
 - `secondary`: fundo `secondary`
-- `outline`: borda `border`, fundo `input-surface`
+- `outline`: borda `border`, fundo transparente e hover em `subtle-surface`
 - `ghost`: transparente com hover em `subtle-surface`
 - `danger`: fundo `danger`
 
 No board, existe uma convencao adicional:
 
-- CTA principal de modal pode usar azul `#669DF1`
+- o azul `#669DF1` fica restrito a drag, destaque de coluna e acentos tecnicos do board
 - `outline` e `secondary` devem permanecer neutros, sem azul excessivo
 
 Regra:
@@ -254,6 +249,12 @@ O input atual e solido e limpo:
 - texto `foreground`
 - placeholder em `muted-foreground`
 - foco com `ring-2` em `ring`
+
+Selects e textareas devem seguir a mesma familia:
+
+- mesma escala tipografica dos inputs (`text-sm`)
+- mesmo raio base (`--radius-md`)
+- mesma superficie (`input-surface`)
 
 Evite underlines, efeitos glow exagerados ou campos com contraste baixo.
 
@@ -274,7 +275,10 @@ Nos modais do board:
 
 - use `--board-dialog-surface`, `--board-dialog-input-surface` e `--board-dialog-border`
 - evite caixas internas desnecessarias envolvendo o formulario
+- use o mesmo padding base dos dialogs padrao como referencia
+- evite separar titulo e conteudo com uma faixa isolada ou linha divisoria extra quando o modal puder seguir a estrutura direta de `DialogHeader + conteudo`
 - priorize divisorias simples e campos diretos
+- preserve o CTA primario no token global `--primary`; o contexto do board deve aparecer na superficie, nao em uma segunda familia de botoes
 
 ### 7.4 Auth Card
 
@@ -291,12 +295,17 @@ Isso e intencional. A tela de auth pode ser mais acolhedora que o miolo operacio
 
 O header usa:
 
-- marca curta `CRM`
+- marca curta `Simple CRM`
 - busca opcional no proprio header, integrada ao bloco da direita
 - papel do usuario em texto curto
 - avatar circular com iniciais
 - menu compacto de conta e acoes
 - tipografia pequena, precisa e com tracking alto na marca
+
+Regra de posicionamento:
+
+- nas telas de gestao e administracao, o header deve respirar do topo da pagina como um bloco flutuante
+- no kanban, o header pode continuar flush no topo quando isso reforcar a leitura de area operacional continua
 
 O objetivo e parecer um cabecalho de aplicacao madura, nao de landing page.
 
@@ -391,16 +400,16 @@ Regras:
 
 ## 11. Nota sobre o estado atual do projeto
 
-O design do projeto ja tem uma base tokenizada consistente, mas ainda convive com partes legadas:
+O design do projeto agora esta mais consistente entre kanban, usuarios e superadmin:
 
-- alguns shells usam raios grandes
-- alguns paineis antigos ainda usam `border-white/60`
-- o kanban ja esta mais alinhado ao sistema novo de tokens
-- a tela de usuarios ja usa o mesmo header e o mesmo fundo do board no contexto atual
+- tipografia de botoes e campos voltou a obedecer os componentes base
+- superadmin usa o mesmo conjunto de bordas, superficies e badges do restante do sistema
+- o kanban preserva sua identidade nas superficies e no drag, mas usa o mesmo CTA principal do restante do produto
+- auth e alguns estados de confirmacao continuam sendo as excecoes deliberadas com shell mais amplo e cantos maiores
 
 Ao evoluir o produto:
 
 - trate `globals.css` como fonte de verdade dos tokens
 - alinhe componentes novos ao padrao tokenizado
 - use o kanban, o header e os componentes `ui/` como referencia principal
-- quando houver duvida entre azul neutro global e azul de board, preserve o azul `#669DF1` apenas no fluxo do kanban
+- quando houver duvida entre o teal global e o azul do board, preserve o azul `#669DF1` apenas para estados tecnicos do kanban

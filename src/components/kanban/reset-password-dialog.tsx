@@ -33,9 +33,6 @@ type ResetPasswordDialogProps = {
 const fieldClassName =
   "rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] pl-11 placeholder:text-[#9fadbc]";
 
-const boardPrimaryButtonClass =
-  "border-transparent bg-[#669DF1] text-[#091218] hover:bg-[#7ba9f3] hover:shadow-[0_10px_24px_-18px_rgba(102,157,241,0.95)]";
-
 export function ResetPasswordDialog({
   onOpenChange,
   open,
@@ -100,7 +97,7 @@ export function ResetPasswordDialog({
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent
-        className="w-[min(94vw,34rem)] rounded-[0.9rem]"
+        className="w-[min(94vw,34rem)]"
         style={dialogStyle}
       >
         <DialogHeader>
@@ -173,7 +170,6 @@ export function ResetPasswordDialog({
           </div>
           <div className="flex justify-end">
             <Button
-              className={boardPrimaryButtonClass}
               disabled={form.formState.isSubmitting}
               type="submit"
             >

@@ -24,6 +24,9 @@ function createDraft(role: CompanyUserDraft["role"] = "member"): CompanyUserDraf
   };
 }
 
+const selectClassName =
+  "flex h-11 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
+
 export function CompanyCreatePage() {
   const router = useRouter();
   const [companyName, setCompanyName] = useState("");
@@ -58,7 +61,7 @@ export function CompanyCreatePage() {
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
       <section
-        className="surface-shadow rounded-[1.75rem] border border-white/60 px-5 py-4"
+        className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] px-5 py-4"
         style={{ background: "var(--header-surface)" }}
       >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -81,7 +84,7 @@ export function CompanyCreatePage() {
       </section>
 
       <section
-        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
+        className="surface-shadow mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] p-5"
         style={{ background: "var(--panel-surface)" }}
       >
         <div className="space-y-2">
@@ -97,7 +100,7 @@ export function CompanyCreatePage() {
       <section className="mt-4 space-y-4">
         {users.map((user, index) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
+            className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-4"
             key={user.id}
             style={{ background: "var(--panel-surface)" }}
           >
@@ -180,7 +183,7 @@ export function CompanyCreatePage() {
               <div className="space-y-2">
                 <Label>Perfil</Label>
                 <select
-                  className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                  className={selectClassName}
                   onChange={(event) =>
                     setUsers((current) =>
                       current.map((item) =>
@@ -202,7 +205,7 @@ export function CompanyCreatePage() {
               <div className="space-y-2">
                 <Label>Status inicial</Label>
                 <select
-                  className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                  className={selectClassName}
                   onChange={(event) =>
                     setUsers((current) =>
                       current.map((item) =>

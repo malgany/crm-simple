@@ -37,9 +37,6 @@ function reindexDrafts(drafts: StageDraft[]) {
   }));
 }
 
-const boardPrimaryButtonClass =
-  "border-transparent bg-[#669DF1] text-[#091218] hover:bg-[#7ba9f3] hover:shadow-[0_10px_24px_-18px_rgba(102,157,241,0.95)]";
-
 export function ManageStagesDialog({
   onOpenChange,
   onSave,
@@ -219,7 +216,6 @@ export function ManageStagesDialog({
               Cancelar
             </Button>
             <Button
-              className={boardPrimaryButtonClass}
               disabled={isSaving}
               onClick={handleSave}
               type="button"

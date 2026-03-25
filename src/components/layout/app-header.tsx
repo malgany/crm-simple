@@ -171,7 +171,7 @@ export function AppHeader({
                   Conta
                 </p>
                 <div className="mt-3 flex items-center gap-3">
-                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[#2563eb] text-sm font-semibold text-white">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-[var(--primary)] text-sm font-semibold text-[var(--primary-foreground)]">
                     {avatarLabel}
                   </div>
                   <div className="min-w-0">

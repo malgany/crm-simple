@@ -64,6 +64,9 @@ const emptyUserForm: CreateUserForm = {
   status: "active",
 };
 
+const selectClassName =
+  "flex h-11 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
+
 function buildEditForm(user: UserManagementItem): EditUserForm {
   return {
     confirmPassword: "",
@@ -303,7 +306,7 @@ export function CompanyUsersPage({
       </section>
 
       <section
-        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
+        className="surface-shadow mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] p-5"
         style={{ background: "var(--panel-surface)" }}
       >
         <div className="grid gap-4 md:grid-cols-[1fr_14rem_auto] md:items-end">
@@ -320,7 +323,7 @@ export function CompanyUsersPage({
           <div className="space-y-2">
             <Label htmlFor="company-edit-status">Status</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               id="company-edit-status"
               onChange={(event) =>
                 setCompanyState((current) => ({
@@ -342,7 +345,7 @@ export function CompanyUsersPage({
       </section>
 
       <section
-        className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 p-5"
+        className="surface-shadow mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] p-5"
         style={{ background: "var(--panel-surface)" }}
       >
         <div className="mb-4 flex items-center gap-2">
@@ -412,7 +415,7 @@ export function CompanyUsersPage({
           <div className="space-y-2">
             <Label htmlFor="company-user-role">Perfil</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               id="company-user-role"
               onChange={(event) =>
                 setCreateForm((current) => ({
@@ -429,7 +432,7 @@ export function CompanyUsersPage({
           <div className="space-y-2">
             <Label htmlFor="company-user-status">Status</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               id="company-user-status"
               onChange={(event) =>
                 setCreateForm((current) => ({
@@ -455,7 +458,7 @@ export function CompanyUsersPage({
       <section className="mt-4 space-y-3">
         {activeUsers.map((user) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
+            className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-4"
             key={user.id}
             style={{ background: "var(--panel-surface)" }}
           >
@@ -511,7 +514,7 @@ export function CompanyUsersPage({
           <div className="space-y-3">
             {deletedUsers.map((user) => (
               <article
-                className="surface-shadow rounded-[1.5rem] border border-dashed border-[var(--border)] p-4 opacity-80"
+                className="surface-shadow rounded-[var(--radius-lg)] border border-dashed border-[var(--border)] p-4 opacity-80"
                 key={user.id}
                 style={{ background: "var(--subtle-surface)" }}
               >
@@ -611,7 +614,7 @@ export function CompanyUsersPage({
                 <div className="space-y-2">
                   <Label htmlFor="edit-company-user-role">Perfil</Label>
                   <select
-                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                    className={selectClassName}
                     id="edit-company-user-role"
                     onChange={(event) =>
                       setEditingUser((current) =>
@@ -632,7 +635,7 @@ export function CompanyUsersPage({
                 <div className="space-y-2">
                   <Label htmlFor="edit-company-user-status">Status</Label>
                   <select
-                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                    className={selectClassName}
                     id="edit-company-user-status"
                     onChange={(event) =>
                       setEditingUser((current) =>

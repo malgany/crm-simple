@@ -12,7 +12,7 @@ export default async function CompaniesPage() {
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
       <section
-        className="surface-shadow rounded-[1.75rem] border border-white/60 px-5 py-4"
+        className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] px-5 py-4"
         style={{ background: "var(--header-surface)" }}
       >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -42,7 +42,7 @@ export default async function CompaniesPage() {
       <section className="mt-4 space-y-3">
         {companies.map((company) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 p-4"
+            className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-4"
             key={company.id}
             style={{ background: "var(--panel-surface)" }}
           >
@@ -55,8 +55,16 @@ export default async function CompaniesPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <span
-                  className="rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
-                  style={{ background: "var(--subtle-surface)" }}
+                  className={
+                    company.status === "active"
+                      ? "rounded-full bg-[var(--primary)]/15 px-3 py-1 text-xs font-semibold text-[var(--primary)]"
+                      : "rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+                  }
+                  style={
+                    company.status === "active"
+                      ? undefined
+                      : { background: "var(--subtle-surface)" }
+                  }
                 >
                   {company.status === "active" ? "Ativa" : "Inativa"}
                 </span>
@@ -74,4 +82,3 @@ export default async function CompaniesPage() {
     </main>
   );
 }
-

@@ -35,13 +35,6 @@ const fieldClassName =
 const selectClassName =
   "flex h-11 w-full rounded-[0.55rem] border border-[var(--board-dialog-border)] bg-[var(--board-dialog-input-surface)] px-4 text-sm text-[var(--foreground)] outline-none transition-[border-color,box-shadow,background-color] focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
 
-const dividerStyle = {
-  borderColor: "rgba(255, 255, 255, 0.06)",
-} satisfies CSSProperties;
-
-const boardPrimaryButtonClass =
-  "border-transparent bg-[#669DF1] text-[#091218] hover:bg-[#7ba9f3] hover:shadow-[0_10px_24px_-18px_rgba(102,157,241,0.95)]";
-
 export function NewContactDialog({
   initialStageId,
   onCreate,
@@ -90,28 +83,19 @@ export function NewContactDialog({
 
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent
-        className="w-[min(94vw,39rem)] overflow-hidden rounded-[0.9rem] p-0"
-        style={dialogStyle}
-      >
-        <div className="px-5 py-5 md:px-6 md:py-6">
-          <DialogHeader className="mb-0 gap-3">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
-              <Plus className="h-4 w-4 text-[var(--primary)]" />
-              Novo lead
-            </div>
-            <DialogTitle>Novo contato</DialogTitle>
-            <DialogDescription>
-              Cadastre os dados principais e escolha a etapa inicial do card.
-            </DialogDescription>
-          </DialogHeader>
-        </div>
+      <DialogContent className="w-[min(94vw,39rem)]" style={dialogStyle}>
+        <DialogHeader className="gap-3">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)]">
+            <Plus className="h-4 w-4 text-[var(--primary)]" />
+            Novo lead
+          </div>
+          <DialogTitle>Novo contato</DialogTitle>
+          <DialogDescription>
+            Cadastre os dados principais e escolha a etapa inicial do card.
+          </DialogDescription>
+        </DialogHeader>
 
-        <form
-          className="space-y-4 border-t px-5 py-5 md:px-6 md:py-6"
-          onSubmit={onSubmit}
-          style={dividerStyle}
-        >
+        <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="new-contact-name">Nome</Label>
             <Input
@@ -164,7 +148,7 @@ export function NewContactDialog({
             </div>
           </div>
 
-          <div className="space-y-2 border-t pt-5" style={dividerStyle}>
+          <div className="space-y-2">
             <Label htmlFor="new-contact-stage">Etapa inicial</Label>
             <select
               className={selectClassName}
@@ -192,7 +176,7 @@ export function NewContactDialog({
               Cancelar
             </Button>
             <Button
-              className={`${boardPrimaryButtonClass} sm:min-w-40`}
+              className="sm:min-w-40"
               disabled={form.formState.isSubmitting}
               type="submit"
             >

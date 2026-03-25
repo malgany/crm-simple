@@ -51,6 +51,9 @@ const emptyUserForm: CreateUserForm = {
   status: "active",
 };
 
+const selectClassName =
+  "flex h-11 w-full rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--input-surface)] px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]";
+
 function buildEditForm(user: UserManagementItem): EditUserForm {
   return {
     confirmPassword: "",
@@ -176,13 +179,16 @@ export function CompanyDetailPage({
 
   return (
     <main className="min-h-screen px-4 py-5 md:px-8 md:py-6">
-      <section className="surface-shadow rounded-[1.75rem] border border-white/60 bg-[linear-gradient(180deg,#fffdf9_0%,#f4efe5_100%)] px-5 py-4">
+      <section
+        className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] px-5 py-4"
+        style={{ background: "var(--header-surface)" }}
+      >
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[var(--primary)]">
               Superadmin
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-950">
+            <h1 className="mt-2 text-2xl font-semibold text-[var(--foreground)]">
               {companyState.name}
             </h1>
             <div className="mt-4 flex flex-wrap gap-3">
@@ -198,7 +204,10 @@ export function CompanyDetailPage({
         </div>
       </section>
 
-      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
+      <section
+        className="surface-shadow mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] p-5"
+        style={{ background: "var(--panel-surface)" }}
+      >
         <div className="grid gap-4 md:grid-cols-[1fr_14rem_auto] md:items-end">
           <div className="space-y-2">
             <Label htmlFor="company-edit-name">Nome da empresa</Label>
@@ -213,7 +222,7 @@ export function CompanyDetailPage({
           <div className="space-y-2">
             <Label htmlFor="company-edit-status">Status</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               id="company-edit-status"
               onChange={(event) =>
                 setCompanyState((current) => ({
@@ -234,10 +243,13 @@ export function CompanyDetailPage({
         </div>
       </section>
 
-      <section className="surface-shadow mt-4 rounded-[1.75rem] border border-white/60 bg-white/90 p-5">
+      <section
+        className="surface-shadow mt-4 rounded-[var(--radius-lg)] border border-[var(--border)] p-5"
+        style={{ background: "var(--panel-surface)" }}
+      >
         <div className="mb-4 flex items-center gap-2">
           <Users className="h-4 w-4 text-[var(--primary)]" />
-          <h2 className="text-lg font-semibold text-slate-950">Novo usuário</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">Novo usuário</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -284,7 +296,7 @@ export function CompanyDetailPage({
           <div className="space-y-2">
             <Label>Perfil</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               onChange={(event) =>
                 setCreateForm((current) => ({
                   ...current,
@@ -300,7 +312,7 @@ export function CompanyDetailPage({
           <div className="space-y-2">
             <Label>Status</Label>
             <select
-              className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+              className={selectClassName}
               onChange={(event) =>
                 setCreateForm((current) => ({
                   ...current,
@@ -325,18 +337,30 @@ export function CompanyDetailPage({
       <section className="mt-4 space-y-3">
         {users.map((user) => (
           <article
-            className="surface-shadow rounded-[1.5rem] border border-white/60 bg-white/90 p-4"
+            className="surface-shadow rounded-[var(--radius-lg)] border border-[var(--border)] p-4"
             key={user.id}
+            style={{ background: "var(--panel-surface)" }}
           >
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-base font-semibold text-slate-950">{user.name}</p>
-                <p className="text-sm text-slate-600">
+                <p className="text-base font-semibold text-[var(--foreground)]">{user.name}</p>
+                <p className="text-sm text-[var(--muted-foreground)]">
                   {user.email} • {user.role === "admin" ? "Admin" : "Usuário"}
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                <span
+                  className={
+                    user.status === "active"
+                      ? "rounded-full bg-[var(--primary)]/15 px-3 py-1 text-xs font-semibold text-[var(--primary)]"
+                      : "rounded-full px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
+                  }
+                  style={
+                    user.status === "active"
+                      ? undefined
+                      : { background: "var(--subtle-surface)" }
+                  }
+                >
                   {user.status === "active" ? "Ativo" : "Inativo"}
                 </span>
                 <Button onClick={() => setEditingUser(buildEditForm(user))} type="button" variant="outline">
@@ -389,7 +413,7 @@ export function CompanyDetailPage({
                 <div className="space-y-2">
                   <Label>Perfil</Label>
                   <select
-                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                    className={selectClassName}
                     onChange={(event) =>
                       setEditingUser((current) =>
                         current
@@ -409,7 +433,7 @@ export function CompanyDetailPage({
                 <div className="space-y-2">
                   <Label>Status</Label>
                   <select
-                    className="flex h-11 w-full rounded-2xl border border-[var(--border)] bg-white px-4 text-sm text-[var(--foreground)] outline-none focus:border-transparent focus:ring-2 focus:ring-[var(--ring)]"
+                    className={selectClassName}
                     onChange={(event) =>
                       setEditingUser((current) =>
                         current
