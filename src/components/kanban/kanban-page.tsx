@@ -136,6 +136,12 @@ export function KanbanPage({
 }: KanbanPageProps) {
   const router = useRouter();
   const { toggleTheme } = useTheme();
+  const [isSimpleMode, setIsSimpleMode] = useState(false);
+  
+  useEffect(() => {
+    setIsSimpleMode(typeof window !== "undefined" && window.localStorage.getItem(`simpleMode_${companyId}`) === "true");
+  }, [companyId]);
+
   const [stages, setStages] = useState(() => buildBoardState(initialStages));
   const [mobileStageId, setMobileStageId] = useState(() => initialStages[0]?.id ?? "");
   const [searchDraft, setSearchDraft] = useState("");
@@ -880,6 +886,7 @@ export function KanbanPage({
             {mobileDealList.length ? (
               mobileDealList.map(({ card, stageName }) => (
                 <DealCard
+                  isSimpleMode={isSimpleMode}
                   card={card}
                   contextLabel={activeMobileStageFilter === "all" ? stageName : null}
                   draggable={false}
@@ -984,6 +991,7 @@ export function KanbanPage({
             <div className="w-0 shrink-0 md:w-4" />
             {filteredStages.map((stage) => (
               <StageColumn
+                isSimpleMode={isSimpleMode}
                 isDragHighlighted={
                   dragOverStageId
                     ? dragOverStageId === stage.id
@@ -1002,6 +1010,7 @@ export function KanbanPage({
             {activeDragCard ? (
               <div className="pointer-events-none w-[18rem]">
                 <DealCard
+                  isSimpleMode={isSimpleMode}
                   card={activeDragCard}
                   className="animate-[kanban-card-tilt_160ms_ease-out_forwards] rotate-[5deg]"
                   draggable={false}
@@ -1015,6 +1024,7 @@ export function KanbanPage({
       </div>
 
       <NewContactDialog
+        isSimpleMode={isSimpleMode}
         initialStageId={preferredNewContactStageId}
         onCreate={handleCreateContact}
         onOpenChange={handleNewContactOpenChange}
@@ -1033,6 +1043,7 @@ export function KanbanPage({
         userEmail={viewer.email}
       />
       <ContactDialog
+        isSimpleMode={isSimpleMode}
         canAssign={!viewer.isSuperadmin}
         card={selectedCard}
         initialFocus={dialogFocus}

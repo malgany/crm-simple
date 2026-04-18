@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type NewContactDialogProps = {
+  isSimpleMode?: boolean;
   initialStageId?: string | null;
   onCreate: (values: ContactSchema) => Promise<boolean>;
   onOpenChange: (open: boolean) => void;
@@ -35,6 +36,7 @@ const fieldClassName =
 
 
 export function NewContactDialog({
+  isSimpleMode = false,
   initialStageId,
   onCreate,
   onOpenChange,
@@ -60,10 +62,10 @@ export function NewContactDialog({
       email: "",
       name: "",
       origin: "",
-      phone: "",
+      phone: isSimpleMode ? "0000000000" : "",
       stageId,
     });
-  }, [form, initialStageId, open, stages]);
+  }, [form, initialStageId, open, stages, isSimpleMode]);
 
   const onSubmit = form.handleSubmit(async (values) => {
     const created = await onCreate(values);
@@ -84,9 +86,11 @@ export function NewContactDialog({
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="w-[min(94vw,39rem)] overflow-hidden p-0 md:p-0 sm:rounded-2xl gap-0" style={dialogStyle}>
         <DialogHeader className="border-b mb-0 px-6 py-5 md:px-7" style={{ borderColor: "var(--board-dialog-border)" }}>
-          <DialogTitle className="text-xl font-bold">Novo contato</DialogTitle>
+          <DialogTitle className="text-xl font-bold">
+            {isSimpleMode ? "Novo card" : "Novo contato"}
+          </DialogTitle>
           <DialogDescription className="mt-1">
-            Cadastre os dados principais do novo contato.
+            {isSimpleMode ? "Insira a descrição do novo card." : "Cadastre os dados principais do novo contato."}
           </DialogDescription>
         </DialogHeader>
 
@@ -96,12 +100,14 @@ export function NewContactDialog({
           style={{ background: "var(--board-dialog-section-surface)" }}
         >
           <div className="space-y-2">
-            <Label htmlFor="new-contact-name">Nome</Label>
+            <Label htmlFor="new-contact-name">
+              {isSimpleMode ? "Descrição" : "Nome"}
+            </Label>
             <Input
               autoFocus
               className={fieldClassName}
               id="new-contact-name"
-              placeholder="Ex.: Maria Oliveira"
+              placeholder={isSimpleMode ? "Ex.: Fazer visita de vistoria" : "Ex.: Maria Oliveira"}
               {...form.register("name")}
             />
             <p className="text-sm text-[var(--danger)]">
@@ -109,43 +115,47 @@ export function NewContactDialog({
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="new-contact-email">E-mail</Label>
-            <Input
-              className={fieldClassName}
-              id="new-contact-email"
-              placeholder="maria@empresa.com"
-              {...form.register("email")}
-            />
-            <p className="text-sm text-[var(--danger)]">
-              {form.formState.errors.email?.message}
-            </p>
-          </div>
+          {!isSimpleMode ? (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="new-contact-email">E-mail</Label>
+                <Input
+                  className={fieldClassName}
+                  id="new-contact-email"
+                  placeholder="maria@empresa.com"
+                  {...form.register("email")}
+                />
+                <p className="text-sm text-[var(--danger)]">
+                  {form.formState.errors.email?.message}
+                </p>
+              </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="new-contact-phone">Telefone</Label>
-              <Input
-                className={fieldClassName}
-                id="new-contact-phone"
-                placeholder="(65) 99999-1111"
-                {...form.register("phone")}
-              />
-              <p className="text-sm text-[var(--danger)]">
-                {form.formState.errors.phone?.message}
-              </p>
-            </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="new-contact-phone">Telefone</Label>
+                  <Input
+                    className={fieldClassName}
+                    id="new-contact-phone"
+                    placeholder="(65) 99999-1111"
+                    {...form.register("phone")}
+                  />
+                  <p className="text-sm text-[var(--danger)]">
+                    {form.formState.errors.phone?.message}
+                  </p>
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="new-contact-origin">Origem</Label>
-              <Input
-                className={fieldClassName}
-                id="new-contact-origin"
-                placeholder="Ex.: Instagram"
-                {...form.register("origin")}
-              />
-            </div>
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-contact-origin">Origem</Label>
+                  <Input
+                    className={fieldClassName}
+                    id="new-contact-origin"
+                    placeholder="Ex.: Instagram"
+                    {...form.register("origin")}
+                  />
+                </div>
+              </div>
+            </>
+          ) : null}
 
           <input type="hidden" {...form.register("stageId")} />
 
@@ -168,7 +178,7 @@ export function NewContactDialog({
               ) : (
                 <Plus className="h-4 w-4" />
               )}
-              Criar contato
+              {isSimpleMode ? "Criar card" : "Criar contato"}
             </Button>
           </div>
         </form>

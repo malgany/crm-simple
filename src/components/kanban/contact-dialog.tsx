@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 type ContactDialogProps = {
+  isSimpleMode?: boolean;
   canAssign: boolean;
   card: KanbanCard | null;
   initialFocus: "details" | "notes";
@@ -104,6 +105,7 @@ function ContactShortcut({
 }
 
 export function ContactDialog({
+  isSimpleMode = false,
   canAssign,
   card,
   initialFocus,
@@ -250,17 +252,21 @@ export function ContactDialog({
                   Ações rápidas
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <ContactShortcut
-                    href={whatsappUrl}
-                    icon={MessageCircleMore}
-                    label="WhatsApp"
-                  />
-                  <ContactShortcut href={telUrl} icon={Phone} label="Ligar" />
-                  <ContactShortcut
-                    href={mailtoUrl}
-                    icon={Mail}
-                    label="E-mail"
-                  />
+                  {!isSimpleMode ? (
+                    <>
+                      <ContactShortcut
+                        href={whatsappUrl}
+                        icon={MessageCircleMore}
+                        label="WhatsApp"
+                      />
+                      <ContactShortcut href={telUrl} icon={Phone} label="Ligar" />
+                      <ContactShortcut
+                        href={mailtoUrl}
+                        icon={Mail}
+                        label="E-mail"
+                      />
+                    </>
+                  ) : null}
                   {canAssign ? (
                     <Button
                       onClick={handleAssignToggle}
@@ -305,11 +311,13 @@ export function ContactDialog({
 
               <form className="space-y-5" onSubmit={handleUpdateContact}>
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--muted-foreground)] border-b pb-2" style={{ borderColor: "var(--board-dialog-border)" }}>
-                  Detalhes do contato
+                  {isSimpleMode ? "Detalhes do card" : "Detalhes do contato"}
                 </p>
 
                 <div className="space-y-2">
-                  <Label htmlFor="contact-name">Nome</Label>
+                  <Label htmlFor="contact-name">
+                    {isSimpleMode ? "Descrição" : "Nome"}
+                  </Label>
                   <Input
                     className={fieldClassName}
                     id="contact-name"
@@ -320,39 +328,43 @@ export function ContactDialog({
                   </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="contact-phone">Telefone</Label>
-                  <Input
-                    className={fieldClassName}
-                    id="contact-phone"
-                    {...contactForm.register("phone")}
-                  />
-                  <p className="text-sm text-[var(--danger)]">
-                    {contactForm.formState.errors.phone?.message}
-                  </p>
-                </div>
+                {!isSimpleMode ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="contact-phone">Telefone</Label>
+                      <Input
+                        className={fieldClassName}
+                        id="contact-phone"
+                        {...contactForm.register("phone")}
+                      />
+                      <p className="text-sm text-[var(--danger)]">
+                        {contactForm.formState.errors.phone?.message}
+                      </p>
+                    </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-email">E-mail</Label>
-                    <Input
-                      className={fieldClassName}
-                      id="contact-email"
-                      {...contactForm.register("email")}
-                    />
-                    <p className="text-sm text-[var(--danger)]">
-                      {contactForm.formState.errors.email?.message}
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-origin">Origem</Label>
-                    <Input
-                      className={fieldClassName}
-                      id="contact-origin"
-                      {...contactForm.register("origin")}
-                    />
-                  </div>
-                </div>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-email">E-mail</Label>
+                        <Input
+                          className={fieldClassName}
+                          id="contact-email"
+                          {...contactForm.register("email")}
+                        />
+                        <p className="text-sm text-[var(--danger)]">
+                          {contactForm.formState.errors.email?.message}
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-origin">Origem</Label>
+                        <Input
+                          className={fieldClassName}
+                          id="contact-origin"
+                          {...contactForm.register("origin")}
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : null}
 
                 <div className="flex flex-col-reverse gap-3 mt-1 sm:flex-row sm:items-center sm:justify-between">
                   <Button
@@ -367,7 +379,7 @@ export function ContactDialog({
                     className="text-[var(--danger)] hover:bg-[var(--danger)]/10 hover:text-[var(--danger)]"
                   >
                     <Trash2 className="h-4 w-4" />
-                    Excluir contato
+                    {isSimpleMode ? "Excluir card" : "Excluir contato"}
                   </Button>
                   <Button
                     disabled={contactForm.formState.isSubmitting || isDeleting}
@@ -378,7 +390,7 @@ export function ContactDialog({
                     ) : (
                       <Save className="h-4 w-4" />
                     )}
-                    Salvar contato
+                    {isSimpleMode ? "Salvar card" : "Salvar contato"}
                   </Button>
                 </div>
               </form>

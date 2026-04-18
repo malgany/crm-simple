@@ -2,7 +2,7 @@
 
 import { LoaderCircle, Pencil, Plus, Trash2, Users } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SignOutButton } from "@/components/auth/signout-button";
 import type { CompanySummary, UserManagementItem } from "@/lib/app.types";
@@ -72,6 +72,20 @@ export function CompanyDetailPage({
 }: CompanyDetailPageProps) {
   const [companyState, setCompanyState] = useState(company);
   const [users, setUsers] = useState(initialUsers);
+  const [isSimpleMode, setIsSimpleMode] = useState(false);
+
+  useEffect(() => {
+    setIsSimpleMode(typeof window !== "undefined" && window.localStorage.getItem(`simpleMode_${company.id}`) === "true");
+  }, [company.id]);
+
+  const toggleSimpleMode = (value: boolean) => {
+    setIsSimpleMode(value);
+    if (value) {
+      window.localStorage.setItem(`simpleMode_${company.id}`, "true");
+    } else {
+      window.localStorage.removeItem(`simpleMode_${company.id}`);
+    }
+  };
   const [createForm, setCreateForm] = useState<CreateUserForm>(emptyUserForm);
   const [isSavingCompany, setIsSavingCompany] = useState(false);
   const [isCreatingUser, setIsCreatingUser] = useState(false);
@@ -236,10 +250,25 @@ export function CompanyDetailPage({
               <option value="inactive">Inativa</option>
             </select>
           </div>
-          <Button disabled={isSavingCompany} onClick={saveCompany} type="button">
+        <Button disabled={isSavingCompany} onClick={saveCompany} type="button">
             {isSavingCompany ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
             Salvar empresa
           </Button>
+        </div>
+
+        <div className="mt-5 border-t border-[var(--border)] pt-5">
+          <div className="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              id="simple-mode-toggle"
+              checked={isSimpleMode}
+              onChange={(e) => toggleSimpleMode(e.target.checked)}
+              className="h-4 w-4 cursor-pointer rounded border-[var(--border)] bg-[var(--input-surface)] text-[var(--primary)] focus:ring-[var(--ring)]"
+            />
+            <Label htmlFor="simple-mode-toggle" className="cursor-pointer">
+              Ativar "Modo Simples" do Kanban para esta empresa neste navegador
+            </Label>
+          </div>
         </div>
       </section>
 

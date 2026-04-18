@@ -12,6 +12,7 @@ import { DealCard } from "@/components/kanban/deal-card";
 
 type StageColumnProps = {
   isDragHighlighted?: boolean;
+  isSimpleMode?: boolean;
   onAddContact: (stageId: string) => void;
   onOpenDetails: (dealId: string) => void;
   stage: Stage;
@@ -19,6 +20,7 @@ type StageColumnProps = {
 
 export function StageColumn({
   isDragHighlighted = false,
+  isSimpleMode = false,
   onAddContact,
   onOpenDetails,
   stage,
@@ -62,6 +64,7 @@ export function StageColumn({
           {stage.cards.length ? (
             stage.cards.map((card) => (
               <DealCard
+                isSimpleMode={isSimpleMode}
                 card={card}
                 key={card.id}
                 onOpenDetails={onOpenDetails}
@@ -89,7 +92,7 @@ export function StageColumn({
           type="button"
         >
           <Plus className="h-4 w-4" />
-          Adicionar contato
+          {isSimpleMode ? "Adicionar card" : "Adicionar contato"}
         </button>
       </footer>
     </section>

@@ -21,6 +21,7 @@ type DealCardProps = {
   contextLabel?: string | null;
   draggable?: boolean;
   className?: string;
+  isSimpleMode?: boolean;
   onOpenDetails: (dealId: string) => void;
   stageId: string;
 };
@@ -58,6 +59,7 @@ export function DealCard({
   contextLabel,
   draggable = true,
   className,
+  isSimpleMode = false,
   onOpenDetails,
   stageId,
 }: DealCardProps) {
@@ -110,9 +112,11 @@ export function DealCard({
           <h3 className="text-sm font-semibold leading-5 text-[var(--foreground)]">
             {card.contact.name}
           </h3>
-          <p className="text-xs text-[var(--muted-foreground)]">
-            {formatPhone(card.contact.phone)}
-          </p>
+          {!isSimpleMode ? (
+            <p className="text-xs text-[var(--muted-foreground)]">
+              {formatPhone(card.contact.phone)}
+            </p>
+          ) : null}
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
@@ -135,9 +139,13 @@ export function DealCard({
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <QuickAction href={whatsappUrl} icon={MessageCircleMore} label="WhatsApp" />
-          <QuickAction href={telUrl} icon={Phone} label="Telefone" />
-          <QuickAction href={mailtoUrl} icon={Mail} label="E-mail" />
+          {!isSimpleMode ? (
+            <>
+              <QuickAction href={whatsappUrl} icon={MessageCircleMore} label="WhatsApp" />
+              <QuickAction href={telUrl} icon={Phone} label="Telefone" />
+              <QuickAction href={mailtoUrl} icon={Mail} label="E-mail" />
+            </>
+          ) : null}
         </div>
         <div
           className="rounded-[0.5rem] px-3 py-1 text-xs font-semibold text-[var(--muted-foreground)]"
