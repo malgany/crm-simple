@@ -312,3 +312,22 @@ export function mergeStageStructure(
     })),
   );
 }
+
+export function generatePlaceholderPhone(stages: Stage[]) {
+  const allCards = stages.flatMap((s) => s.cards);
+  let maxPlaceholder = -1;
+
+  for (const card of allCards) {
+    const phone = card.contact.phone_normalized;
+    // Check if it's a sequence of at least 10 digits starting with zeros
+    if (phone.length >= 10 && /^0+\d*$/.test(phone)) {
+      const val = parseInt(phone, 10);
+      if (!isNaN(val) && val > maxPlaceholder) {
+        maxPlaceholder = val;
+      }
+    }
+  }
+
+  const nextVal = maxPlaceholder + 1;
+  return nextVal.toString().padStart(11, "0");
+}

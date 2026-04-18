@@ -6,9 +6,9 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import type { CSSProperties } from "react";
 import type { Stage } from "@/lib/app.types";
-import { resolveInitialContactStageId } from "@/lib/kanban";
 import type { ContactSchema } from "@/lib/validation";
 import { contactSchema } from "@/lib/validation";
+import { generatePlaceholderPhone, resolveInitialContactStageId } from "@/lib/kanban";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,7 +62,7 @@ export function NewContactDialog({
       email: "",
       name: "",
       origin: "",
-      phone: isSimpleMode ? "0000000000" : "",
+      phone: isSimpleMode ? generatePlaceholderPhone(stages) : "",
       stageId,
     });
   }, [form, initialStageId, open, stages, isSimpleMode]);
