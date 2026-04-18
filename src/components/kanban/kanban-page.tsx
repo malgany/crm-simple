@@ -818,9 +818,16 @@ export function KanbanPage({
         style={{ background: "var(--board-topbar-surface)" }}
       >
         <div className="flex flex-col gap-3 md:h-full md:flex-row md:items-center md:justify-between">
-          <h1 className="text-sm font-semibold tracking-[0.01em] text-[var(--foreground)]">
-            {viewer.companyName ?? "Kanban"}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-sm font-semibold tracking-[0.01em] text-[var(--foreground)]">
+              {viewer.companyName ?? "Kanban"}
+            </h1>
+            {isSimpleMode ? (
+              <span className="bg-[var(--primary)] text-[var(--primary-foreground)] text-[9px] px-1.5 py-0.5 rounded-full uppercase tracking-tighter font-extrabold shadow-sm">
+                Modo Simples
+              </span>
+            ) : null}
+          </div>
 
           {canManageStages ? (
             <Button

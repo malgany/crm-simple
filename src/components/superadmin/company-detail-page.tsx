@@ -256,19 +256,46 @@ export function CompanyDetailPage({
           </Button>
         </div>
 
-        <div className="mt-5 border-t border-[var(--border)] pt-5">
-          <div className="flex items-center gap-3">
-            <input 
-              type="checkbox" 
-              id="simple-mode-toggle"
-              checked={isSimpleMode}
-              onChange={(e) => toggleSimpleMode(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded border-[var(--border)] bg-[var(--input-surface)] text-[var(--primary)] focus:ring-[var(--ring)]"
-            />
-            <Label htmlFor="simple-mode-toggle" className="cursor-pointer">
-              Ativar "Modo Simples" do Kanban para esta empresa neste navegador
-            </Label>
+        <div className="mt-8 border-t border-[var(--border)] pt-8">
+          <div 
+            className="flex items-center justify-between gap-4 p-4 rounded-[var(--radius-lg)] border border-[var(--border)] transition-colors hover:bg-[var(--subtle-surface)]"
+            style={{ background: isSimpleMode ? "rgba(20, 94, 99, 0.05)" : "transparent" }}
+          >
+            <div className="space-y-1">
+              <Label 
+                htmlFor="simple-mode-toggle" 
+                className="text-base font-bold cursor-pointer flex items-center gap-2"
+              >
+                <span>Modo Simples do Kanban</span>
+                {isSimpleMode ? (
+                  <span className="bg-[var(--primary)] text-[var(--primary-foreground)] text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold">
+                    Ativo
+                  </span>
+                ) : null}
+              </Label>
+              <p className="text-sm text-[var(--muted-foreground)]">
+                Simplifica a visualização do quadro removendo campos de telefone, e-mail e atalhos rápidos. Ideal para gestão básica de tarefas.
+              </p>
+            </div>
+            <div className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
+              <input 
+                type="checkbox" 
+                id="simple-mode-toggle"
+                checked={isSimpleMode}
+                onChange={(e) => toggleSimpleMode(e.target.checked)}
+                className="peer absolute inset-0 z-10 opacity-0 cursor-pointer"
+              />
+              <span 
+                aria-hidden="true"
+                className={`pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${isSimpleMode ? "translate-x-5" : "translate-x-0"}`}
+                style={{ backgroundColor: isSimpleMode ? "white" : "#cbd5e1" }}
+              />
+              <span className={`absolute inset-0 rounded-full transition-colors ${isSimpleMode ? "bg-[var(--primary)]" : "bg-slate-200"}`} />
+            </div>
           </div>
+          <p className="mt-2 text-[11px] text-[var(--muted-foreground)] italic px-1">
+            * Esta configuração é salva apenas neste navegador (LocalStorage).
+          </p>
         </div>
       </section>
 
